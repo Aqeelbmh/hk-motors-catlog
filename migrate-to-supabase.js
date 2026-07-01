@@ -6,23 +6,28 @@ const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
 // 1. Resolve environment credentials
-let url = process.env.SUPABASE_URL;
-let key = process.env.SUPABASE_KEY;
+let url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+let key = process.env.SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-// Check if .env file exists and parse it manually if needed
-const envPath = path.join(__dirname, '.env');
-if (fs.existsSync(envPath)) {
-  const envContent = fs.readFileSync(envPath, 'utf-8');
-  envContent.split('\n').forEach(line => {
-    const parts = line.split('=');
-    if (parts.length >= 2) {
-      const k = parts[0].trim();
-      const v = parts.slice(1).join('=').trim().replace(/^['"]|['"]$/g, '');
-      if (k === 'SUPABASE_URL') url = v;
-      if (k === 'SUPABASE_KEY' || k === 'SUPABASE_ANON_KEY') key = v;
-    }
-  });
+// Check if .env or .env.local files exist and parse them manually if needed
+function loadEnvFile(fileName) {
+  const envPath = path.join(__dirname, fileName);
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf-8');
+    envContent.split('\n').forEach(line => {
+      const parts = line.split('=');
+      if (parts.length >= 2) {
+        const k = parts[0].trim();
+        const v = parts.slice(1).join('=').trim().replace(/^['"]|['"]$/g, '');
+        if (k === 'SUPABASE_URL' || k === 'NEXT_PUBLIC_SUPABASE_URL') url = v;
+        if (k === 'SUPABASE_KEY' || k === 'SUPABASE_ANON_KEY' || k === 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY' || k === 'NEXT_PUBLIC_SUPABASE_ANON_KEY') key = v;
+      }
+    });
+  }
 }
+
+loadEnvFile('.env');
+loadEnvFile('.env.local');
 
 if (!url || !key) {
   console.error('❌ Error: SUPABASE_URL and SUPABASE_KEY are required.');
