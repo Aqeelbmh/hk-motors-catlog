@@ -213,6 +213,7 @@
       text-overflow: ellipsis;
       background: linear-gradient(135deg, var(--text) 30%, var(--accent) 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
@@ -544,6 +545,7 @@
       color: var(--text);
       display: -webkit-box;
       -webkit-line-clamp: 2;
+      line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
       height: 2.8em;
@@ -627,6 +629,7 @@
       color: var(--text);
       outline: none;
       -moz-appearance: textfield;
+      appearance: textfield;
     }
 
     .qty-val::-webkit-outer-spin-button,
@@ -1441,6 +1444,7 @@
       text-transform: uppercase;
       background: linear-gradient(135deg, var(--hero-title-from) 40%, var(--text-muted) 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       line-height: 1.1;
     }
@@ -3049,38 +3053,92 @@
     async function loadProducts() {
       const storedVersion = localStorage.getItem(VERSION_KEY);
       const stored = localStorage.getItem(STORAGE_KEY);
+      let localProducts = [];
+
+      // Load from localStorage if available
       if (stored && storedVersion === DATA_VERSION) {
         try {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length) {
-            products = validateAndRepairProducts(parsed);
-            saveProducts();
-            return;
+            localProducts = validateAndRepairProducts(parsed);
           }
         } catch (e) {
-          console.warn('LocalStorage database corrupt, attempts recovery...', e);
+          console.warn('LocalStorage database corrupt, attempting recovery...', e);
         }
       }
+
+      // Always cross-check with products.json to recover lost data
       try {
         const res = await fetch(PRODUCTS_URL, { cache: 'no-cache' });
         if (res.ok) {
           const parsed = await res.json();
-          if (!Array.isArray(parsed) || !parsed.length) throw new Error('Empty catalog');
-          products = validateAndRepairProducts(parsed);
-          saveProducts();
-          localStorage.setItem(VERSION_KEY, DATA_VERSION);
-          return;
+          if (Array.isArray(parsed) && parsed.length) {
+            const jsonProducts = validateAndRepairProducts(parsed);
+
+            if (localProducts.length === 0) {
+              // No local data — use products.json entirely
+              products = jsonProducts;
+              saveProducts();
+              localStorage.setItem(VERSION_KEY, DATA_VERSION);
+              console.log(`[Load] Loaded ${products.length} products from products.json (no local data).`);
+              return;
+            }
+
+            if (jsonProducts.length > localProducts.length) {
+              // products.json has MORE products — merge missing ones into local
+              const localMap = new Map();
+              localProducts.forEach(p => localMap.set(String(p.productId), p));
+
+              let recovered = 0;
+              jsonProducts.forEach(jp => {
+                const id = String(jp.productId);
+                if (!localMap.has(id)) {
+                  localProducts.push(jp);
+                  recovered++;
+                }
+              });
+
+              if (recovered > 0) {
+                console.log(`[Load] Recovered ${recovered} missing products from products.json. Total: ${localProducts.length}`);
+              }
+            }
+          }
         }
       } catch (e) {
-        console.warn('Could not load products.json', e);
+        console.warn('Could not load products.json for cross-check:', e);
       }
+
+      if (localProducts.length > 0) {
+        products = localProducts;
+        saveProducts();
+        console.log(`[Load] Loaded ${products.length} products.`);
+        return;
+      }
+
       products = [];
       showToast('Could not load catalog. Resetting to defaults.', 'error');
     }
 
     function saveProducts() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-      localStorage.setItem(VERSION_KEY, DATA_VERSION);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+        localStorage.setItem(VERSION_KEY, DATA_VERSION);
+      } catch (e) {
+        console.error('[Storage] Failed to save products to localStorage (quota exceeded?):', e);
+        // Attempt to save a minimal version without image_urls to fit in localStorage
+        try {
+          const slim = products.map(p => {
+            const copy = { ...p };
+            delete copy.image_urls;
+            return copy;
+          });
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
+          localStorage.setItem(VERSION_KEY, DATA_VERSION);
+          console.warn('[Storage] Saved slim version without image_urls to localStorage.');
+        } catch (e2) {
+          console.error('[Storage] Even slim save failed:', e2);
+        }
+      }
     }
 
     // ── Supabase Mapping Helpers ──
@@ -3284,22 +3342,34 @@
         if (isManual) showToast('Syncing catalog from Supabase...', 'info');
         console.log('[Sync] Fetching latest products list from Supabase...');
         
+        // Fetch ALL products from Supabase with robust pagination
+        // First, get the exact total count
+        const { count: totalCount, error: countErr } = await supabase
+          .from('products')
+          .select('*', { count: 'exact', head: true });
+
+        if (countErr) console.warn('[Sync] Could not get exact count:', countErr);
+        else console.log(`[Sync] Supabase reports ${totalCount} total products.`);
+
         let allData = [];
         let from = 0;
-        const limit = 1000;
+        const limit = 500; // Smaller batch size for more reliable pagination
         let hasMore = true;
+        let pageNum = 0;
         
         while (hasMore) {
+          pageNum++;
           const { data, error } = await supabase
             .from('products')
             .select('*')
-            .order('name')
+            .order('product_id')
             .range(from, from + limit - 1);
 
           if (error) throw error;
 
           if (data && data.length > 0) {
             allData = allData.concat(data);
+            console.log(`[Sync] Page ${pageNum}: fetched ${data.length} rows (total so far: ${allData.length})`);
             if (data.length < limit) {
               hasMore = false;
             } else {
@@ -3310,16 +3380,63 @@
           }
         }
 
-        const mapped = allData.map(mapSupabaseToLocal);
-        products = validateAndRepairProducts(mapped);
+        // Safety check: if we know the total count and didn't get all rows, warn
+        if (totalCount && allData.length < totalCount) {
+          console.warn(`[Sync] WARNING: Expected ${totalCount} products but only fetched ${allData.length}. Possible pagination issue.`);
+        }
+
+        console.log(`[Sync] Fetched ${allData.length} products from Supabase.`);
+        const cloudProducts = allData.map(mapSupabaseToLocal);
+
+        // MERGE: Cloud updates local, but local-only products are PRESERVED
+        const cloudMap = new Map();
+        cloudProducts.forEach(p => cloudMap.set(String(p.productId), p));
+
+        const localOnlyProducts = [];
+        const previousLocal = [...products]; // snapshot before merge
+
+        // Start with all cloud products (they are the latest truth)
+        const merged = [...cloudProducts];
+
+        // Find local-only products (exist locally but NOT in Supabase)
+        previousLocal.forEach(localP => {
+          const id = String(localP.productId);
+          if (!cloudMap.has(id)) {
+            localOnlyProducts.push(localP);
+            merged.push(localP); // preserve them
+          }
+        });
+
+        products = validateAndRepairProducts(merged);
         saveProducts();
+
+        console.log(`[Sync] Merged: ${cloudProducts.length} from cloud + ${localOnlyProducts.length} local-only = ${products.length} total.`);
+
+        // Upload local-only products to Supabase so they aren't lost
+        if (localOnlyProducts.length > 0) {
+          console.log(`[Sync] Uploading ${localOnlyProducts.length} local-only products to Supabase...`);
+          const BATCH_SIZE = 100;
+          let uploadedCount = 0;
+          for (let i = 0; i < localOnlyProducts.length; i += BATCH_SIZE) {
+            const batch = localOnlyProducts.slice(i, i + BATCH_SIZE).map(mapLocalToSupabase);
+            const { error: upErr } = await supabase
+              .from('products')
+              .upsert(batch, { onConflict: 'product_id' });
+            if (upErr) {
+              console.warn(`[Sync] Failed to upload batch at index ${i}:`, upErr);
+            } else {
+              uploadedCount += batch.length;
+            }
+          }
+          console.log(`[Sync] Uploaded ${uploadedCount} local-only products to Supabase.`);
+          if (isManual) showToast(`Uploaded ${uploadedCount} missing products to cloud.`, 'info');
+        }
         
         renderAdminTable();
         renderCatalog();
         updateCartBadge();
 
-        console.log(`[Sync] Synced ${products.length} products locally.`);
-        if (isManual) showToast(`Sync complete: ${products.length} products loaded.`, 'success');
+        if (isManual) showToast(`Sync complete: ${products.length} products (${cloudProducts.length} cloud + ${localOnlyProducts.length} local).`, 'success');
 
         // Download image assets from cloud asynchronously in background
         if (products.length > 0) {
@@ -3356,6 +3473,16 @@
         const count = r.dataUrls ? r.dataUrls.length : (r.dataUrl ? 1 : 0);
         localMap.set(String(r.productId), count);
       });
+
+      // Clean up stale local images for products where cloud has deleted all images
+      for (const p of products) {
+        const id = String(p.productId);
+        const cloudCount = (p.image_urls && Array.isArray(p.image_urls)) ? p.image_urls.length : 0;
+        if (cloudCount === 0 && localMap.has(id)) {
+          await deleteProductImage(id);
+          console.log(`[Sync] Cleared stale local image for product ${id} (deleted from cloud)`);
+        }
+      }
 
       // Find products that have cloud images and are either not cached or the count differs
       const pending = products.filter(p => {
@@ -4045,11 +4172,20 @@
       thumbsRow.innerHTML = '';
       
       let urls = [];
-      if (hasImg && imageCache[String(id)]) {
-        urls = Array.isArray(imageCache[String(id)]) ? imageCache[String(id)] : [imageCache[String(id)]];
-      }
-      if (p.image_urls && Array.isArray(p.image_urls) && p.image_urls.length > urls.length) {
-        urls = p.image_urls;
+      if (isCloudSyncActive) {
+        // When cloud sync is active, cloud is the source of truth
+        urls = (p.image_urls && Array.isArray(p.image_urls)) ? [...p.image_urls] : [];
+        // Only fall back to local cache when offline and cloud has no data
+        if (urls.length === 0 && !navigator.onLine && hasImg && imageCache[String(id)]) {
+          urls = Array.isArray(imageCache[String(id)]) ? imageCache[String(id)] : [imageCache[String(id)]];
+        }
+      } else {
+        if (hasImg && imageCache[String(id)]) {
+          urls = Array.isArray(imageCache[String(id)]) ? imageCache[String(id)] : [imageCache[String(id)]];
+        }
+        if (p.image_urls && Array.isArray(p.image_urls) && p.image_urls.length > urls.length) {
+          urls = p.image_urls;
+        }
       }
       
       if (urls.length > 0) {
@@ -4568,8 +4704,9 @@
         const hasImg = imageIds.has(id);
         const cached = getFirstImage(id);
         const cloudUrl = p.image_urls && p.image_urls[0];
-        const displayUrl = cached || cloudUrl;
-        const hasImgSrc = hasImg || !!cloudUrl;
+        // When cloud sync is active, cloud is source of truth; local cache is offline fallback only
+        const displayUrl = isCloudSyncActive ? (cloudUrl || (!navigator.onLine ? cached : null)) : (cached || cloudUrl);
+        const hasImgSrc = isCloudSyncActive ? !!cloudUrl : (hasImg || !!cloudUrl);
         const cells = visibleCols.map(c => {
           let val = p[c] || '';
           if (['retailPrice', 'buyRate', 'wholesalePrice'].includes(c)) {
@@ -4607,7 +4744,10 @@
         const id = String(p.productId);
         const cloudUrl = p.image_urls && p.image_urls[0];
         const localUrl = imageCache[id] ? imageCache[id][0] : null;
-        const url = localUrl || cloudUrl || (imageIds.has(id) ? await getProductImage(id) : null);
+        // When cloud sync is active, prefer cloud URL; only use local as offline fallback
+        const url = isCloudSyncActive
+          ? (cloudUrl || (!navigator.onLine ? localUrl : null))
+          : (localUrl || cloudUrl || (imageIds.has(id) ? await getProductImage(id) : null));
         if (!url) continue;
         const row = document.querySelector(`#adminTableBody tr[data-id="${CSS.escape(id)}"]`);
         if (!row) continue;
@@ -4668,7 +4808,6 @@
       modalImages = merged;
       document.getElementById('productModalTitle').textContent = productId ? 'Edit Product' : 'Add Product';
 
-      const p = productId ? products.find(x => x.productId === productId) : {};
       const fields = document.getElementById('productFormFields');
 
       const FIELD_GROUPS = [
@@ -4802,6 +4941,23 @@
         // Upload images if cloud sync is active
         const cloudUrls = [];
         if (isCloudSyncActive) {
+          // Delete old images from Supabase Storage that were removed by the user
+          const oldProduct = editingProductId ? products.find(p => p.productId === editingProductId) : null;
+          const oldCloudUrls = (oldProduct && oldProduct.image_urls && Array.isArray(oldProduct.image_urls)) ? oldProduct.image_urls : [];
+          const keepUrls = new Set(modalImages.filter(u => !u.startsWith('data:')));
+          const removedUrls = oldCloudUrls.filter(url => !keepUrls.has(url));
+          if (removedUrls.length > 0) {
+            showToast('Removing deleted images from cloud...', 'info');
+            const filePaths = removedUrls.map(url => {
+              const parts = url.split('/product-images/');
+              return parts.length > 1 ? decodeURIComponent(parts[parts.length - 1]) : null;
+            }).filter(Boolean);
+            if (filePaths.length > 0) {
+              const { error: delErr } = await supabase.storage.from('product-images').remove(filePaths);
+              if (delErr) console.warn('[Storage] Failed to delete old images:', delErr);
+            }
+          }
+
           showToast('Uploading images to cloud...', 'info');
           for (let i = 0; i < modalImages.length; i++) {
             const img = modalImages[i];
@@ -5148,7 +5304,7 @@
 
       // Trigger automatic cloud database sync on startup if online
       if (isCloudSyncActive && navigator.onLine) {
-        syncCatalogFromSupabase(false);
+        await syncCatalogFromSupabase(false);
       }
 
       document.getElementById('themeToggle').addEventListener('click', toggleTheme);
