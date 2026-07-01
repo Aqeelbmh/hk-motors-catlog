@@ -1,0 +1,37 @@
+{
+  "name": "HK Motors — Spare Parts Catalog",
+  "short_name": "HK Motors",
+  "description": "Premium Auto and Truck Spare Parts Catalog.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#030812",
+  "theme_color": "#0a355c",
+  "orientation": "any",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

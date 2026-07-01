@@ -1,0 +1,18 @@
+{
+  "name": "hk-motors-catalog",
+  "version": "1.0.0",
+  "description": "HK Motors Spare Parts Catalog tablet app",
+  "main": "index.html",
+  "scripts": {
+    "build": "[ -z \"$SUPABASE_URL\" ] || echo \"window.SUPABASE_URL = '${SUPABASE_URL}'; window.SUPABASE_KEY = '${SUPABASE_KEY}';\" > supabase-config.js; mkdir -p www && cp index.html products.json logo-hk.png \"logo hk.png\" manifest.json service-worker.js supabase-config.js www/ && cp -R icons www/",
+    "cap:sync": "npm run build && cap sync",
+    "cap:open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/cli": "^6.2.1",
+    "@capacitor/core": "^6.2.1",
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.110.0"
+  }
+}

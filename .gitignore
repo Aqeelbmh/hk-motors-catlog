@@ -1,0 +1,7 @@
+node_modules/
+.env*
+supabase-config.js
+www/
+android/
+*.log
+.DS_Store

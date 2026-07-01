@@ -1,0 +1,6 @@
+// Supabase Client Credentials Template
+// Save this file as 'supabase-config.js' and fill in your actual credentials.
+// Do not commit 'supabase-config.js' to git.
+
+window.SUPABASE_URL = "https://your-supabase-project.supabase.co";
+window.SUPABASE_KEY = "your-supabase-anon-key";
