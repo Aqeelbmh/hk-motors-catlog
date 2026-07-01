@@ -3284,26 +3284,45 @@
         if (isManual) showToast('Syncing catalog from Supabase...', 'info');
         console.log('[Sync] Fetching latest products list from Supabase...');
         
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .order('name');
+        let allData = [];
+        let from = 0;
+        const limit = 1000;
+        let hasMore = true;
+        
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .order('name')
+            .range(from, from + limit - 1);
 
-        if (error) throw error;
+          if (error) throw error;
 
-        if (data && Array.isArray(data)) {
-          const mapped = data.map(mapSupabaseToLocal);
-          products = validateAndRepairProducts(mapped);
-          saveProducts();
-          
-          renderAdminTable();
-          renderCatalog();
-          updateCartBadge();
+          if (data && data.length > 0) {
+            allData = allData.concat(data);
+            if (data.length < limit) {
+              hasMore = false;
+            } else {
+              from += limit;
+            }
+          } else {
+            hasMore = false;
+          }
+        }
 
-          console.log(`[Sync] Synced ${products.length} products locally.`);
-          if (isManual) showToast(`Sync complete: ${products.length} products loaded.`, 'success');
+        const mapped = allData.map(mapSupabaseToLocal);
+        products = validateAndRepairProducts(mapped);
+        saveProducts();
+        
+        renderAdminTable();
+        renderCatalog();
+        updateCartBadge();
 
-          // Download image assets from cloud asynchronously in background
+        console.log(`[Sync] Synced ${products.length} products locally.`);
+        if (isManual) showToast(`Sync complete: ${products.length} products loaded.`, 'success');
+
+        // Download image assets from cloud asynchronously in background
+        if (products.length > 0) {
           syncImagesFromSupabase();
         }
       } catch (err) {
