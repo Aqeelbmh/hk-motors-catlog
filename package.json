@@ -4,7 +4,7 @@
   "description": "HK Motors Spare Parts Catalog tablet app",
   "main": "index.html",
   "scripts": {
-    "build": "[ -f supabase-config.js ] || echo \"window.SUPABASE_URL = ''; window.SUPABASE_KEY = '';\" > supabase-config.js; [ -z \"$SUPABASE_URL\" ] || echo \"window.SUPABASE_URL = '${SUPABASE_URL}'; window.SUPABASE_KEY = '${SUPABASE_KEY}';\" > supabase-config.js; mkdir -p www && cp index.html products.json logo-hk.png \"logo hk.png\" manifest.json service-worker.js supabase-config.js www/ && cp -R icons www/",
+    "build": "node generate-config.js && mkdir -p www && cp index.html products.json logo-hk.png \"logo hk.png\" manifest.json service-worker.js supabase-config.js www/ && cp -R icons www/",
     "cap:sync": "npm run build && cap sync",
     "cap:open": "cap open android"
   },
