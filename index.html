@@ -3514,11 +3514,29 @@
       }
       try {
         const dataUrl = await compressImage(file);
+        
+        if (isCloudSyncActive) {
+          showToast('Uploading image to cloud...', 'info');
+          const cloudUrl = await uploadImageToSupabase(productId, dataUrl, 0);
+          
+          showToast('Saving to cloud database...', 'info');
+          const { error } = await supabase
+            .from('products')
+            .update({ image_urls: [cloudUrl] })
+            .eq('product_id', String(productId));
+            
+          if (error) throw error;
+          
+          const localProd = products.find(p => p.productId === String(productId));
+          if (localProd) localProd.image_urls = [cloudUrl];
+        }
+        
         await saveProductImage(productId, dataUrl);
-        showToast('Image saved');
+        showToast('Image saved successfully', 'success');
         return dataUrl;
       } catch (e) {
-        showToast('Could not save image');
+        console.error('[handleImageFile] Error:', e);
+        showToast('Could not save image: ' + (e.message || e), 'error');
         return null;
       }
     }
