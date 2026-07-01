@@ -40,67 +40,95 @@ const supabase = createClient(url, key);
 
 async function run() {
   try {
-    const productsPath = path.join(__dirname, 'products.json');
-    if (!fs.existsSync(productsPath)) {
-      console.error('❌ Error: products.json not found in this directory.');
+    const exportPath = path.join(__dirname, 'PSHOP_Products_Export_20260622_192931.json');
+    if (!fs.existsSync(exportPath)) {
+      console.error('❌ Error: PSHOP_Products_Export_20260622_192931.json not found in this directory.');
       process.exit(1);
     }
 
-    console.log('📖 Reading products.json...');
-    const rawData = fs.readFileSync(productsPath, 'utf-8');
-    const catalog = JSON.parse(rawData);
+    console.log('📖 Reading PSHOP_Products_Export_20260622_192931.json...');
+    const rawData = fs.readFileSync(exportPath, 'utf-8');
+    const parsedData = JSON.parse(rawData);
+    const catalog = parsedData["All Products"] || parsedData;
 
     if (!Array.isArray(catalog) || catalog.length === 0) {
-      console.error('❌ Error: products.json is empty or not a valid JSON array.');
+      console.error('❌ Error: Export array is empty or invalid.');
       process.exit(1);
     }
 
-    console.log(`⚡ Found ${catalog.length} products to migrate.`);
-    console.log('🚀 Starting batch upload (100 products per request)...');
+    console.log(`⚡ Found ${catalog.length} products to process.`);
 
+    // 1. Generate local products.json content with 0 prices
+    const localProducts = catalog.map((p, idx) => {
+      const productId = String(p["Product ID"] || p.productId || idx + 1);
+      return {
+        productId: productId,
+        type: String(p["Type"] || p.type || '').trim(),
+        productName: String(p["Product Name"] || p.productName || 'Unnamed Part').replace(/\s+/g, ' ').trim(),
+        quantity: String(p["Quantity"] || p.quantity || '0'),
+        brandCode: String(p["Brand Code"] || p.brandCode || '').trim(),
+        brand: String(p["Brand"] || p.brand || 'GENUINE').trim(),
+        category: String(p["Category"] || p.category || 'Accessories').trim(),
+        buyRate: "0",          // NOT uploading the price!
+        retailPrice: "0",     // NOT uploading the price!
+        wholesalePrice: "0",   // NOT uploading the price!
+        barcode: String(p["Barcode"] || p.barcode || '').trim(),
+        expiryDate: String(p["Expiry Date"] || p.expiryDate || '').trim(),
+        lowStockAlert: String(p["Low Stock Alert"] || p.lowStockAlert || '0'),
+        retailCode: String(p["Retail Code"] || p.retailCode || '').trim(),
+        wholesaleCode: String(p["Wholesale Code"] || p.wholesaleCode || '').trim(),
+        mrpCode: String(p["MRP Code"] || p.mrpCode || '').trim(),
+        dateAdded: String(p["Date Added"] || p.dateAdded || '').trim(),
+        sleeve: String(p["Sleeve"] || p.sleeve || '').trim(),
+        fit: String(p["Fit"] || p.fit || p.vehicle_fitment || 'General').trim(),
+        size: String(p["Size"] || p.size || 'Standard').trim(),
+        color: String(p["Color"] || p.color || '').trim(),
+        pattern: String(p["Pattern"] || p.pattern || '').trim(),
+        description: String(p["Description"] || p.description || '').replace(/\s+/g, ' ').trim(),
+        profit: "0",          // NOT uploading the price!
+        discount: "0",
+        tax: "0",
+        stockQty: String(p["Stock Qty"] || p.stockQty || '0'),
+        image_urls: p.image_urls || []
+      };
+    });
+
+    console.log('✍️ Writing clean products.json file (0 prices)...');
+    fs.writeFileSync(path.join(__dirname, 'products.json'), JSON.stringify(localProducts, null, 2));
+
+    console.log('🚀 Starting batch upload to Supabase (100 products per request)...');
     const BATCH_SIZE = 100;
-    for (let i = 0; i < catalog.length; i += BATCH_SIZE) {
-      const batch = catalog.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < localProducts.length; i += BATCH_SIZE) {
+      const batch = localProducts.slice(i, i + BATCH_SIZE);
       const rows = batch.map(p => {
-        // Parse numbers safely
-        const stockQty = parseInt(p.stockQty || p.quantity || '0', 10) || 0;
-        const quantity = parseInt(p.quantity || p.stockQty || '0', 10) || 0;
-        const buyRate = parseFloat(p.buyRate) || 0.0;
-        const retailPrice = parseFloat(p.retailPrice) || 0.0;
-        const wholesalePrice = parseFloat(p.wholesalePrice) || 0.0;
-        const profit = parseFloat(p.profit) || 0.0;
-        const discount = parseFloat(p.discount) || 0.0;
-        const tax = parseFloat(p.tax) || 0.0;
-        const lowStockAlert = parseInt(p.lowStockAlert || '0', 10) || 0;
-
         return {
-          product_id: String(p.productId),
-          type: p.type ? String(p.type).trim() : null,
-          name: String(p.productName || 'Unnamed spare part').replace(/\s+/g, ' ').trim(),
-          quantity: quantity,
-          brand_code: p.brandCode ? String(p.brandCode).trim() : null,
-          brand: p.brand ? String(p.brand).trim() : 'GENUINE',
-          category: p.category ? String(p.category).trim() : 'Accessories',
-          buy_rate: buyRate,
-          retail_price: retailPrice,
-          wholesale_price: wholesalePrice,
-          part_number: p.barcode ? String(p.barcode) : null,
-          expiry_date: p.expiryDate ? String(p.expiryDate).trim() : null,
-          low_stock_alert: lowStockAlert,
-          retail_code: p.retailCode ? String(p.retailCode).trim() : null,
-          wholesale_code: p.wholesaleCode ? String(p.wholesaleCode).trim() : null,
-          mrp_code: p.mrpCode ? String(p.mrpCode).trim() : null,
-          sleeve: p.sleeve ? String(p.sleeve).trim() : null,
-          vehicle_fitment: p.fit ? String(p.fit).trim() : 'General',
-          size: p.size ? String(p.size).trim() : 'Standard',
-          color: p.color ? String(p.color).trim() : null,
-          pattern: p.pattern ? String(p.pattern).trim() : null,
-          description: p.description ? String(p.description).replace(/\s+/g, ' ').trim() : null,
-          profit: profit,
-          discount: discount,
-          tax: tax,
-          stock_qty: stockQty,
-          image_urls: [] // Populated by browser image sync utility
+          product_id: p.productId,
+          type: p.type || null,
+          name: p.productName,
+          quantity: parseInt(p.quantity, 10) || 0,
+          brand_code: p.brandCode || null,
+          brand: p.brand || 'GENUINE',
+          category: p.category || 'Accessories',
+          buy_rate: 0.0,          // Set prices to 0.0
+          retail_price: 0.0,
+          wholesale_price: 0.0,
+          part_number: p.barcode || null,
+          expiry_date: p.expiryDate || null,
+          low_stock_alert: parseInt(p.lowStockAlert, 10) || 0,
+          retail_code: p.retailCode || null,
+          wholesale_code: p.wholesaleCode || null,
+          mrp_code: p.mrpCode || null,
+          sleeve: p.sleeve || null,
+          vehicle_fitment: p.fit || 'General',
+          size: p.size || 'Standard',
+          color: p.color || null,
+          pattern: p.pattern || null,
+          description: p.description || null,
+          profit: 0.0,
+          discount: 0.0,
+          tax: 0.0,
+          stock_qty: parseInt(p.stockQty, 10) || 0,
+          image_urls: p.image_urls || []
         };
       });
 
@@ -114,10 +142,10 @@ async function run() {
         throw error;
       }
 
-      console.log(`✅ Uploaded products ${i + 1} to ${Math.min(i + BATCH_SIZE, catalog.length)}...`);
+      console.log(`✅ Uploaded products ${i + 1} to ${Math.min(i + BATCH_SIZE, localProducts.length)}...`);
     }
 
-    console.log('\n🎉 Database migration complete! All products are now in Supabase.');
+    console.log('\n🎉 Database migration complete! All products are now in Supabase with $0 prices.');
     console.log('Next step: Log into the HK Motors Admin Panel online and run the "Cloud Image Migration Utility" to upload images.');
   } catch (err) {
     console.error('\n❌ Migration failed:', err.message || err);
