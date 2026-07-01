@@ -3335,11 +3335,36 @@
       if (!isCloudSyncActive || !navigator.onLine) return;
       console.log('[Sync] Checking image assets synchronization...');
 
-      // Find products that have image urls but aren't cached locally in IndexedDB
+      let db;
+      try {
+        db = await openImageDB();
+      } catch (e) {
+        console.warn('[Sync] Could not open Image DB:', e);
+        return;
+      }
+
+      // Fetch all local image records to compare counts
+      const localRecords = await new Promise((resolve, reject) => {
+        const tx = db.transaction(IMAGE_STORE, 'readonly');
+        const req = tx.objectStore(IMAGE_STORE).getAll();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+
+      const localMap = new Map();
+      localRecords.forEach(r => {
+        const count = r.dataUrls ? r.dataUrls.length : (r.dataUrl ? 1 : 0);
+        localMap.set(String(r.productId), count);
+      });
+
+      // Find products that have cloud images and are either not cached or the count differs
       const pending = products.filter(p => {
-        const hasCloudImages = p.image_urls && Array.isArray(p.image_urls) && p.image_urls.length > 0;
-        const isLocalCached = imageIds.has(String(p.productId));
-        return hasCloudImages && !isLocalCached;
+        const id = String(p.productId);
+        const cloudCount = (p.image_urls && Array.isArray(p.image_urls)) ? p.image_urls.length : 0;
+        if (cloudCount === 0) return false;
+        
+        const localCount = localMap.get(id) || 0;
+        return localCount !== cloudCount;
       });
 
       if (pending.length === 0) {
@@ -3753,14 +3778,17 @@
       const qty = cardQty[id] || 1;
       const stock = getEffectiveStock(p);
       const oos = stock <= 0;
-      const hasImg = imageIds.has(String(id));
+      const firstCloudImg = p.image_urls && p.image_urls.length > 0 ? p.image_urls[0] : null;
+      const firstLocalImg = getFirstImage(id);
+      const imgSrc = firstLocalImg || firstCloudImg;
+      const hasImg = !!imgSrc;
       const partNumVal = p.barcode || p.productId || 'N/A';
       const compatibilityVal = p.fit || 'General Compatibility';
       return `
         <div class="product-card${oos ? ' out-of-stock' : ''}" data-id="${esc(id)}">
           <div class="product-image-wrap" data-img-id="${esc(id)}" data-loaded="${hasImg ? '1' : '0'}" onclick="window.location.hash='#/product/${esc(id)}'" style="cursor:pointer">
-            ${hasImg && getFirstImage(id)
-              ? `<img src="${getFirstImage(id)}" alt="${esc(p.productName)}" loading="lazy">`
+            ${hasImg
+              ? `<img src="${imgSrc}" alt="${esc(p.productName)}" loading="lazy">`
               : imagePlaceholderHtml()}
           </div>
           <div class="product-category">${esc(getStandardCategory(p.category))}</div>
@@ -4016,7 +4044,14 @@
       const thumbsRow = document.getElementById('detailsThumbsRow');
       thumbsRow.innerHTML = '';
       
-      const urls = (hasImg && imageCache[String(id)]) ? (Array.isArray(imageCache[String(id)]) ? imageCache[String(id)] : [imageCache[String(id)]]) : [];
+      let urls = [];
+      if (hasImg && imageCache[String(id)]) {
+        urls = Array.isArray(imageCache[String(id)]) ? imageCache[String(id)] : [imageCache[String(id)]];
+      }
+      if (p.image_urls && Array.isArray(p.image_urls) && p.image_urls.length > urls.length) {
+        urls = p.image_urls;
+      }
+      
       if (urls.length > 0) {
         gallery.innerHTML = `<img id="detailsMainImg" src="${urls[0]}" alt="${esc(p.productName)}">`;
         if (urls.length > 1) {
@@ -4532,6 +4567,9 @@
         const id = String(p.productId);
         const hasImg = imageIds.has(id);
         const cached = getFirstImage(id);
+        const cloudUrl = p.image_urls && p.image_urls[0];
+        const displayUrl = cached || cloudUrl;
+        const hasImgSrc = hasImg || !!cloudUrl;
         const cells = visibleCols.map(c => {
           let val = p[c] || '';
           if (['retailPrice', 'buyRate', 'wholesalePrice'].includes(c)) {
@@ -4543,15 +4581,15 @@
           }
           return `<td title="${esc(val)}">${displayVal}</td>`;
         }).join('');
-        const thumb = hasImg && cached
-          ? `<img class="admin-thumb" src="${cached}" alt="">`
+        const thumb = displayUrl
+          ? `<img class="admin-thumb" src="${displayUrl}" alt="">`
           : `<div class="admin-thumb-empty">📷</div>`;
         return `<tr class="${low ? 'low-stock' : ''}" data-id="${esc(id)}">
           ${cells}
           <td>
             <div class="admin-image-cell">
               ${thumb}
-              <button class="btn btn-ghost btn-sm upload-img-btn" data-id="${esc(id)}">${hasImg ? 'Change' : 'Upload'}</button>
+              <button class="btn btn-ghost btn-sm upload-img-btn" data-id="${esc(id)}">${hasImgSrc ? 'Change' : 'Upload'}</button>
             </div>
           </td>
           <td><div class="action-btns">
@@ -4567,8 +4605,9 @@
     async function loadAdminThumbnails(items) {
       for (const p of items) {
         const id = String(p.productId);
-        if (!imageIds.has(id) || imageCache[id]) continue;
-        const url = await getProductImage(id);
+        const cloudUrl = p.image_urls && p.image_urls[0];
+        const localUrl = imageCache[id] ? imageCache[id][0] : null;
+        const url = localUrl || cloudUrl || (imageIds.has(id) ? await getProductImage(id) : null);
         if (!url) continue;
         const row = document.querySelector(`#adminTableBody tr[data-id="${CSS.escape(id)}"]`);
         if (!row) continue;
@@ -4611,7 +4650,22 @@
 
     async function openProductModal(productId) {
       editingProductId = productId || null;
-      modalImages = productId ? await getProductImages(productId) : [];
+      let localUrls = [];
+      if (productId) {
+        localUrls = await getProductImages(productId);
+      }
+      const p = productId ? products.find(x => x.productId === String(productId)) : null;
+      let cloudUrls = p && p.image_urls && Array.isArray(p.image_urls) ? p.image_urls : [];
+      
+      // Merge local and cloud URLs, removing duplicates
+      const merged = [...localUrls];
+      cloudUrls.forEach(url => {
+        if (!merged.includes(url)) {
+          merged.push(url);
+        }
+      });
+      
+      modalImages = merged;
       document.getElementById('productModalTitle').textContent = productId ? 'Edit Product' : 'Add Product';
 
       const p = productId ? products.find(x => x.productId === productId) : {};
