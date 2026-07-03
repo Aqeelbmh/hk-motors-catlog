@@ -2735,6 +2735,7 @@
 
         <button class="btn btn-ghost btn-sm" id="cloudSyncBtn" style="border-radius: 8px; padding: 0.55rem 1rem;">🔄 Sync Now</button>
         <button class="btn btn-ghost btn-sm" id="migrateImagesBtn" style="border-radius: 8px; padding: 0.55rem 1rem;" title="Upload all IndexedDB images to Supabase Storage and update URLs.">☁️ Migrate Images to Cloud</button>
+        <button class="btn btn-ghost btn-sm" id="orderHistoryBtn" style="border-radius: 8px; padding: 0.55rem 1rem;">📋 Orders</button>
 
         <div style="flex-grow: 1;"></div>
 
@@ -2749,6 +2750,15 @@
         </thead>
         <tbody id="adminTableBody"></tbody>
       </table>
+    </div>
+
+    <!-- Order History Section -->
+    <div id="orderHistorySection" style="margin-top: 2rem; display: none;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 0.5rem;">📋 Order History</h3>
+        <button class="btn btn-ghost btn-sm" id="closeOrderHistoryBtn" style="border-radius: 8px;">✕ Close</button>
+      </div>
+      <div id="orderHistoryList" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
     </div>
   </div>
 
@@ -2855,6 +2865,7 @@
     const STORAGE_KEY = 'hkmotors_products';
     const LANG_KEY = 'hkmotors_lang';
     const THEME_KEY = 'hkmotors_theme';
+    const CART_KEY = 'hkmotors_cart';
 
     // ── Supabase Client Initialization ──
     const SUPABASE_URL = window.SUPABASE_URL || '';
@@ -4582,8 +4593,34 @@
         cart[productId] = { product: p, qty: 0 };
       }
       cart[productId].qty = (cart[productId].qty || 0) + qty;
+      saveCart();
       updateCartBadge();
       showToast(t('addedToCart'));
+    }
+
+    function saveCart() {
+      try {
+        const slim = {};
+        Object.entries(cart).forEach(([id, item]) => {
+          slim[id] = { productId: item.product.productId, productName: item.product.productName, qty: item.qty };
+        });
+        localStorage.setItem(CART_KEY, JSON.stringify(slim));
+      } catch (e) { /* ignore */ }
+    }
+
+    function loadCart() {
+      try {
+        const stored = localStorage.getItem(CART_KEY);
+        if (!stored) return;
+        const slim = JSON.parse(stored);
+        Object.entries(slim).forEach(([id, item]) => {
+          const p = products.find(x => x.productId === id);
+          if (p) {
+            cart[id] = { product: p, qty: item.qty || 1 };
+          }
+        });
+        updateCartBadge();
+      } catch (e) { /* ignore */ }
     }
 
     function updateCartBadge() {
@@ -4641,7 +4678,7 @@
       document.getElementById('cartPanel').classList.remove('open');
     }
 
-    function sendWhatsApp() {
+    async function sendWhatsApp() {
       const name = document.getElementById('customerName').value.trim();
       const phone = document.getElementById('customerPhone').value.trim();
       const notes = document.getElementById('orderNotes').value.trim();
@@ -4664,8 +4701,131 @@
       msg += `*Items:*\n${lines.join('\n')}\n`;
       if (notes) msg += `\n📝 *Notes:* ${notes}\n`;
 
+      // Save order to Supabase
+      if (isCloudSyncActive && navigator.onLine) {
+        try {
+          const orderItems = items.map(({ product: p, qty }) => ({
+            productId: p.productId,
+            productName: p.productName,
+            qty: qty
+          }));
+
+          const { error } = await supabase.from('orders').insert({
+            customer_name: name,
+            customer_phone: phone,
+            notes: notes || null,
+            items: orderItems,
+            item_count: items.length,
+            status: 'pending'
+          });
+
+          if (error) console.warn('[Orders] Failed to save order:', error);
+          else console.log('[Orders] Order saved to Supabase.');
+        } catch (e) {
+          console.warn('[Orders] Could not save order:', e);
+        }
+      }
+
+      // Auto-reduce stock quantities
+      let stockUpdated = false;
+      for (const { product: p, qty } of items) {
+        const prod = products.find(x => x.productId === p.productId);
+        if (prod) {
+          const currentStock = parseInt(prod.stockQty || prod.quantity || '0', 10);
+          const newStock = Math.max(0, currentStock - qty);
+          prod.stockQty = String(newStock);
+          prod.quantity = String(newStock);
+          stockUpdated = true;
+        }
+      }
+
+      if (stockUpdated) {
+        saveProducts();
+
+        // Update stock in Supabase too
+        if (isCloudSyncActive && navigator.onLine) {
+          for (const { product: p, qty } of items) {
+            const prod = products.find(x => x.productId === p.productId);
+            if (prod) {
+              await supabase.from('products')
+                .update({ stock_qty: parseInt(prod.stockQty, 10), quantity: parseInt(prod.quantity, 10) })
+                .eq('product_id', p.productId)
+                .catch(e => console.warn('[Stock] Update failed:', e));
+            }
+          }
+        }
+      }
+
       const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
       window.open(url, '_blank');
+
+      // Clear cart after order
+      cart = {};
+      saveCart();
+      updateCartBadge();
+      closeCart();
+      document.getElementById('customerName').value = '';
+      document.getElementById('customerPhone').value = '';
+      document.getElementById('orderNotes').value = '';
+      showToast('Order sent! Stock updated.', 'success');
+      renderAdminTable();
+    }
+
+    // ── Order History ──
+    async function loadOrderHistory() {
+      if (!isCloudSyncActive || !navigator.onLine) {
+        showToast('Order history requires cloud sync and internet.', 'warning');
+        return;
+      }
+
+      const section = document.getElementById('orderHistorySection');
+      const list = document.getElementById('orderHistoryList');
+      section.style.display = 'block';
+      list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem;">Loading orders...</p>';
+
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:2rem;">No orders yet.</p>';
+          return;
+        }
+
+        list.innerHTML = data.map(order => {
+          const date = new Date(order.created_at);
+          const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+          const timeStr = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+          const items = order.items || [];
+          const statusColor = order.status === 'completed' ? 'var(--success, #22c55e)' : order.status === 'cancelled' ? 'var(--danger)' : 'var(--accent)';
+
+          return `
+            <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem;">
+                <div>
+                  <strong style="color:var(--text);font-size:0.95rem;">👤 ${esc(order.customer_name)}</strong>
+                  <span style="color:var(--text-muted);font-size:0.8rem;margin-left:0.5rem;">📞 ${esc(order.customer_phone)}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:0.75rem;">
+                  <span style="font-size:0.75rem;padding:0.2rem 0.6rem;border-radius:20px;background:${statusColor};color:#fff;font-weight:600;text-transform:uppercase;">${esc(order.status || 'pending')}</span>
+                  <span style="color:var(--text-muted);font-size:0.75rem;">${dateStr} ${timeStr}</span>
+                </div>
+              </div>
+              <div style="font-size:0.85rem;color:var(--text);">
+                ${items.map(i => `<span style="display:inline-block;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:0.15rem 0.5rem;margin:0.15rem 0.25rem 0.15rem 0;font-size:0.8rem;">${esc(i.productName)} ×${i.qty}</span>`).join('')}
+              </div>
+              ${order.notes ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.4rem;">📝 ${esc(order.notes)}</div>` : ''}
+            </div>`;
+        }).join('');
+      } catch (e) {
+        console.error('[Orders] Failed to load history:', e);
+        list.innerHTML = `<p style="color:var(--danger);text-align:center;padding:1rem;">Failed to load orders: ${e.message}</p>`;
+      }
     }
 
     // ── Admin Panel ──
@@ -5299,6 +5459,7 @@
 
       await loadProducts();
       await loadImageIndex();
+      loadCart(); // Restore cart from localStorage
       currentLang = localStorage.getItem(LANG_KEY) || 'en';
       applyLanguage();
 
@@ -5408,12 +5569,19 @@
       document.getElementById('cartItems').addEventListener('click', e => {
         if (e.target.classList.contains('cart-item-remove')) {
           delete cart[e.target.dataset.id];
+          saveCart();
           updateCartBadge();
           renderCart();
         }
       });
 
       document.getElementById('whatsappBtn').addEventListener('click', sendWhatsApp);
+
+      // Order History
+      document.getElementById('orderHistoryBtn').addEventListener('click', loadOrderHistory);
+      document.getElementById('closeOrderHistoryBtn').addEventListener('click', () => {
+        document.getElementById('orderHistorySection').style.display = 'none';
+      });
 
       // Admin Login Modal Actions
       document.getElementById('passwordCancel').addEventListener('click', () => {
