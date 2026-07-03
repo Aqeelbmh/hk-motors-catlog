@@ -45,6 +45,8 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- HTML5 QR Code Barcode Library -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <!-- jsPDF Receipt Generator Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     .scan-btn {
       color: var(--text-muted);
@@ -2379,6 +2381,51 @@
       100% { background-position: -200% 0; }
     }
 
+    /* Horizontal Category Carousel */
+    .horizontal-category-carousel-wrap {
+      width: 100%;
+      padding: 0.85rem 1.5rem;
+      background: var(--bg-alt);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .horizontal-category-carousel {
+      display: flex;
+      gap: 0.75rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding: 0.25rem 0;
+    }
+    .horizontal-category-carousel::-webkit-scrollbar {
+      display: none;
+    }
+    .category-carousel-item {
+      padding: 0.5rem 1.25rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      box-shadow: var(--shadow);
+    }
+    .category-carousel-item.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 4px 10px rgba(255, 51, 68, 0.25);
+    }
+    .category-carousel-item:hover:not(.active) {
+      border-color: var(--accent);
+      background: var(--surface-hover);
+    }
   </style>
 </head>
 <body>
@@ -2526,6 +2573,10 @@
         <p>Search and filter our complete database of spare parts</p>
       </div>
     </div>
+    <!-- Horizontal Category swiping carousel -->
+    <div class="horizontal-category-carousel-wrap">
+      <div class="horizontal-category-carousel" id="masterCategoryCarousel"></div>
+    </div>
     <div class="section-container all-products-layout">
       <!-- Advanced Sticky Left Filter Panel -->
       <aside class="advanced-filters-panel">
@@ -2666,9 +2717,12 @@
       </div>
       <button class="btn-whatsapp" id="whatsappBtn" disabled>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.884 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      <span data-i18n="sendWhatsApp">Send Order via WhatsApp</span>
-    </button>
-  </div>
+        <span data-i18n="sendWhatsApp">Send Order via WhatsApp</span>
+      </button>
+      <button class="btn btn-ghost" id="downloadReceiptBtn" disabled style="width: 100%; margin-top: 0.5rem; border-radius: 12px; font-weight: 700; height: 48px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        📄 Download Receipt (PDF)
+      </button>
+    </div>
   </aside>
 
   <!-- Admin View -->
@@ -2704,7 +2758,14 @@
         <div class="stat-info">
           <span class="stat-label">Without Images</span>
           <span class="stat-val" id="statNoImages">0</span>
-        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Chart Container -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin: 0 0 1.5rem 0; box-shadow: var(--shadow);">
+      <h3 style="font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">📊 Inventory Breakdown (by Category)</h3>
+      <div id="analyticsChartWrapper" style="width: 100%; min-height: 120px; display: flex; flex-direction: column; gap: 0.75rem;">
+        <!-- Filled dynamically with inline SVG bars -->
       </div>
     </div>
 
@@ -3056,6 +3117,65 @@
     let modalImages = [];
     let quickUploadId = null;
     let adminLowStockFilterActive = false;
+
+    // ── Fuzzy Search Matcher ──
+    function fuzzyMatch(text, query) {
+      if (!query) return true;
+      text = String(text || '').toLowerCase().trim();
+      query = String(query).toLowerCase().trim();
+      if (text.includes(query)) return true;
+      
+      const terms = query.split(/\s+/);
+      return terms.every(term => {
+        let textIdx = 0;
+        for (let termIdx = 0; termIdx < term.length; termIdx++) {
+          textIdx = text.indexOf(term[termIdx], textIdx);
+          if (textIdx === -1) return false;
+          textIdx++; // move past matching character
+        }
+        return true;
+      });
+    }
+
+    // ── Admin Panel Analytics Chart ──
+    function renderAnalyticsCharts() {
+      const container = document.getElementById('analyticsChartWrapper');
+      if (!container) return;
+
+      const catCounts = {};
+      products.forEach(p => {
+        const cat = getStandardCategory(p.category);
+        catCounts[cat] = (catCounts[cat] || 0) + 1;
+      });
+
+      const sorted = Object.entries(catCounts).sort((a, b) => b[1] - a[1]);
+      const maxCount = sorted.length > 0 ? sorted[0][1] : 1;
+
+      // Color maps for categories to look extra premium
+      const catColors = {
+        'Engine Parts': 'linear-gradient(90deg, #ef4444 0%, #b91c1c 100%)',
+        'Brake Parts': 'linear-gradient(90deg, #f97316 0%, #c2410c 100%)',
+        'Suspension Parts': 'linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%)',
+        'Electrical Parts': 'linear-gradient(90deg, #eab308 0%, #a16207 100%)',
+        'Filters': 'linear-gradient(90deg, #10b981 0%, #047857 100%)',
+        'Gaskets': 'linear-gradient(90deg, #a855f7 0%, #6b21a8 100%)',
+        'Bearings': 'linear-gradient(90deg, #06b6d4 0%, #0891b2 100%)',
+        'Accessories': 'linear-gradient(90deg, #64748b 0%, #334155 100%)'
+      };
+
+      container.innerHTML = sorted.map(([cat, count]) => {
+        const pct = (count / maxCount) * 100;
+        const color = catColors[cat] || 'linear-gradient(90deg, var(--accent) 0%, var(--logo-sky-blue) 100%)';
+        return `
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%;">
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text); width: 120px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${esc(cat)}</div>
+            <div style="flex: 1; background: var(--bg-alt); height: 16px; border-radius: 8px; overflow: hidden; position: relative;">
+              <div style="width: ${pct}%; height: 100%; background: ${color}; border-radius: 8px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+            </div>
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); width: 60px; text-align: right;">${count.toLocaleString()}</div>
+          </div>`;
+      }).join('');
+    }
 
     // ── Storage ──
     function getEffectiveStock(p) {
@@ -4097,6 +4217,34 @@
       const vehicleFilter = document.getElementById('masterVehicleFilter').value;
       const sortVal = document.getElementById('masterSortFilter').value;
 
+      // Populate category carousel if it is empty
+      const carousel = document.getElementById('masterCategoryCarousel');
+      if (carousel && carousel.children.length === 0) {
+        const cats = ['All Parts', ...Object.keys(CATEGORIES_METADATA)];
+        carousel.innerHTML = cats.map(c => {
+          const isActive = c === 'All Parts' ? !categoryFilter : c === categoryFilter;
+          return `<div class="category-carousel-item${isActive ? ' active' : ''}" data-category="${c === 'All Parts' ? '' : esc(c)}">
+            ${c}
+          </div>`;
+        }).join('');
+
+        // Bind carousel click events
+        carousel.querySelectorAll('.category-carousel-item').forEach(item => {
+          item.onclick = () => {
+            const catVal = item.dataset.category;
+            document.getElementById('masterCategoryFilter').value = catVal;
+            renderAllProductsView(true);
+          };
+        });
+      } else if (carousel) {
+        // Sync active state in carousel when categoryFilter updates
+        carousel.querySelectorAll('.category-carousel-item').forEach(item => {
+          const catVal = item.dataset.category;
+          const isActive = (!categoryFilter && !catVal) || (categoryFilter === catVal);
+          item.classList.toggle('active', isActive);
+        });
+      }
+
       // Populate filters dynamically if they have no options loaded
       const catSelect = document.getElementById('masterCategoryFilter');
       if (catSelect.options.length <= 1) {
@@ -4123,19 +4271,13 @@
           sortedVehicles.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
       }
 
-      // Perform filtering
+      // Perform filtering using subsequential fuzzy search matcher
       allMasterFiltered = products.filter(p => {
         const stdCat = getStandardCategory(p.category);
-        const partNo = String(p.barcode || p.productId).toLowerCase();
+        const partNo = String(p.barcode || p.productId);
         
-        const matchSearch = !searchQuery || 
-          (p.productName || '').toLowerCase().includes(searchQuery) ||
-          partNo.includes(searchQuery) ||
-          (p.brand || '').toLowerCase().includes(searchQuery) ||
-          (p.fit || '').toLowerCase().includes(searchQuery) ||
-          (p.category || '').toLowerCase().includes(searchQuery) ||
-          (p.description || '').toLowerCase().includes(searchQuery) ||
-          stdCat.toLowerCase().includes(searchQuery);
+        const combinedText = `${p.productName} ${partNo} ${p.brand || ''} ${p.fit || ''} ${p.category || ''} ${p.description || ''} ${stdCat}`;
+        const matchSearch = fuzzyMatch(combinedText, searchQuery);
 
         const matchCat = !categoryFilter || stdCat === categoryFilter;
         const matchBrand = !brandFilter || p.brand === brandFilter;
@@ -4679,6 +4821,8 @@
         container.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:2rem 0">${t('cartEmpty')}</p>`;
         document.getElementById('cartGrandTotal').textContent = `${t('rs')} 0`;
         document.getElementById('whatsappBtn').disabled = true;
+        const dlBtn = document.getElementById('downloadReceiptBtn');
+        if (dlBtn) dlBtn.disabled = true;
         return;
       }
 
@@ -4707,6 +4851,8 @@
 
       document.getElementById('cartGrandTotal').textContent = `${t('rs')} ${formatPrice(total)}`;
       document.getElementById('whatsappBtn').disabled = false;
+      const dlBtn = document.getElementById('downloadReceiptBtn');
+      if (dlBtn) dlBtn.disabled = false;
     }
 
     function openCart() {
@@ -4811,6 +4957,118 @@
       document.getElementById('orderNotes').value = '';
       showToast('Order sent! Stock updated.', 'success');
       renderAdminTable();
+    }
+
+    // ── Generate & Download Invoice Receipt PDF ──
+    function downloadOrderReceipt() {
+      const name = document.getElementById('customerName').value.trim();
+      const phone = document.getElementById('customerPhone').value.trim();
+      const notes = document.getElementById('orderNotes').value.trim();
+
+      if (!name || !phone) {
+        showToast(t('fillRequired'), 'warning');
+        return;
+      }
+
+      const items = Object.values(cart);
+      if (items.length === 0) return;
+
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        // Header decoration band
+        doc.setFillColor(10, 53, 92); // Deep Navy (#0a355c)
+        doc.rect(0, 0, 210, 35, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(22);
+        doc.text('HK MOTORS', 15, 18);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.text('Premium Spare Parts Catalog Order Receipt', 15, 26);
+
+        // Header info metadata
+        doc.setTextColor(80, 80, 80);
+        doc.setFontSize(9);
+        const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        doc.text(`Date: ${dateStr}`, 140, 15);
+        doc.text(`WhatsApp: +${WHATSAPP_NUMBER}`, 140, 21);
+
+        // Customer details block
+        doc.setFillColor(241, 245, 249);
+        doc.rect(15, 45, 180, 24, 'F');
+        doc.setDrawColor(203, 213, 225);
+        doc.rect(15, 45, 180, 24, 'D');
+
+        doc.setTextColor(15, 23, 42);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text('CUSTOMER DETAILS', 20, 51);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text(`Name: ${name}`, 20, 57);
+        doc.text(`Phone: ${phone}`, 20, 63);
+
+        // Table Header
+        let y = 80;
+        doc.setFillColor(10, 53, 92);
+        doc.rect(15, y, 180, 8, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.text('No.', 18, y + 5.5);
+        doc.text('Product Name', 30, y + 5.5);
+        doc.text('Brand', 125, y + 5.5);
+        doc.text('Qty', 175, y + 5.5);
+
+        // Table Rows
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(15, 23, 42);
+        
+        items.forEach(({ product: p, qty }, idx) => {
+          y += 8;
+          if (y > 270) { doc.addPage(); y = 20; }
+          // Alternating row background colors
+          if (idx % 2 === 1) {
+            doc.setFillColor(248, 250, 252);
+            doc.rect(15, y, 180, 8, 'F');
+          }
+          doc.rect(15, y, 180, 8, 'D');
+          doc.text(String(idx + 1), 18, y + 5.5);
+          doc.text(esc(p.productName).substring(0, 48), 30, y + 5.5);
+          doc.text(esc(p.brand || 'GENUINE').substring(0, 20), 125, y + 5.5);
+          doc.text(String(qty), 175, y + 5.5);
+        });
+
+        // Notes if any
+        if (notes) {
+          y += 15;
+          if (y > 270) { doc.addPage(); y = 20; }
+          doc.setFont('helvetica', 'bold');
+          doc.text('Customer Notes:', 15, y);
+          doc.setFont('helvetica', 'normal');
+          doc.text(notes, 15, y + 5);
+        }
+
+        // Footer
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text('Thank you for ordering with HK Motors!', 105, 285, null, null, 'center');
+
+        doc.save(`HK_Motors_Order_${name.replace(/\s+/g, '_')}.pdf`);
+        showToast('Receipt PDF downloaded successfully!', 'success');
+      } catch (err) {
+        console.error('[Receipt PDF] Failed:', err);
+        showToast('Failed to generate PDF receipt: ' + err.message, 'error');
+      }
     }
 
     // ── Order History ──
@@ -4975,7 +5233,8 @@
         if (noImageOnly && imageIds.has(String(p.productId))) return false;
         if (adminLowStockFilterActive && !isLowStock(p)) return false;
         if (!search) return true;
-        return COLUMNS.some(col => String(p[col] || '').toLowerCase().includes(search));
+        const combinedText = COLUMNS.map(col => String(p[col] || '')).join(' ');
+        return fuzzyMatch(combinedText, search);
       });
 
       // Calculate and render dashboard statistics card metrics
@@ -5043,7 +5302,7 @@
           <td>
             <div class="admin-image-cell">
               ${thumb}
-              <button class="btn btn-ghost btn-sm upload-img-btn" data-id="${esc(id)}">${hasImgSrc ? 'Change' : 'Upload'}</button>
+              <button class="btn btn-ghost btn-sm" onclick="quickUploadImage('${esc(id)}')" style="font-size:0.75rem;padding:0.2rem 0.5rem;border:1px solid var(--border);border-radius:6px;">${hasImgSrc ? 'Change' : 'Upload'}</button>
             </div>
           </td>
           <td><div class="action-btns">
@@ -5054,6 +5313,7 @@
       }).join('');
 
       loadAdminThumbnails(filtered);
+      renderAnalyticsCharts(); // Render inventory analytics distribution chart
     }
 
     async function loadAdminThumbnails(items) {
@@ -5849,6 +6109,7 @@
       });
 
       document.getElementById('whatsappBtn').addEventListener('click', sendWhatsApp);
+      document.getElementById('downloadReceiptBtn').addEventListener('click', downloadOrderReceipt);
 
       // Order History
       document.getElementById('orderHistoryBtn').addEventListener('click', loadOrderHistory);
