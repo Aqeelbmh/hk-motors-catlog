@@ -43,7 +43,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Sinhala:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
   <!-- SheetJS Excel Library -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- HTML5 QR Code Barcode Library -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
+    .scan-btn {
+      color: var(--text-muted);
+      transition: color 0.2s ease, transform 0.2s ease;
+      cursor: pointer;
+    }
+    .scan-btn:hover {
+      color: var(--accent) !important;
+      transform: scale(1.15);
+    }
     :root {
       --logo-dark-blue: #0a355c;
       --logo-sky-blue: #0b76b2;
@@ -2417,6 +2428,7 @@
         <div class="hero-search-wrap">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input type="search" class="hero-search-input" id="heroSearchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search by name, part number, vehicle model, or brand...">
+          <button class="btn btn-ghost scan-btn" id="heroScanBtn" style="padding: 0.5rem; margin-right: 0.25rem; font-size: 1.25rem; border: none; background: transparent;" title="Scan Barcode">📷</button>
           <button class="btn btn-accent btn-search" id="heroSearchBtn">Search</button>
         </div>
       </div>
@@ -2519,9 +2531,10 @@
       <aside class="advanced-filters-panel">
         <div class="filter-group">
           <label class="filter-label">Search Query</label>
-          <div class="search-wrap" style="width: 100%">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="search" class="search-input" id="masterSearch" placeholder="Name, part number...">
+          <div class="search-wrap" style="width: 100%; display: flex; align-items: center; position: relative;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 1rem;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="search" class="search-input" id="masterSearch" placeholder="Name, part number..." style="padding-right: 2.75rem;">
+            <button class="btn btn-ghost scan-btn" id="masterScanBtn" style="position: absolute; right: 0.5rem; border: none; background: transparent; cursor: pointer; font-size: 1.1rem; padding: 0.25rem;" title="Scan Barcode">📷</button>
           </div>
         </div>
         <div class="filter-group">
@@ -2672,21 +2685,21 @@
 
     <!-- Stats Dashboard Grid -->
     <div class="admin-stats-grid">
-      <div class="admin-stat-card">
+      <div class="admin-stat-card" id="statCardTotalProducts" style="cursor: pointer;" title="Show all products">
         <div class="stat-icon" style="color:var(--accent)">📦</div>
         <div class="stat-info">
           <span class="stat-label">Total Products</span>
           <span class="stat-val" id="statTotalProducts">0</span>
         </div>
       </div>
-      <div class="admin-stat-card low-stock">
+      <div class="admin-stat-card low-stock" id="statCardLowStock" style="cursor: pointer;" title="Toggle low-stock filter">
         <div class="stat-icon" style="color:var(--danger)">⚠️</div>
         <div class="stat-info">
           <span class="stat-label">Low Stock Items</span>
           <span class="stat-val" id="statLowStock">0</span>
         </div>
       </div>
-      <div class="admin-stat-card no-img">
+      <div class="admin-stat-card no-img" id="statCardNoImages" style="cursor: pointer;" title="Toggle no-image filter">
         <div class="stat-icon" style="color:var(--text-muted)">📷</div>
         <div class="stat-info">
           <span class="stat-label">Without Images</span>
@@ -2698,9 +2711,10 @@
     <div class="admin-toolbar-v2">
       <!-- Top Tier: Search & Filters -->
       <div class="toolbar-section filters-section">
-        <div class="search-wrap" style="flex: 2; min-width: 260px;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="search" class="search-input" id="adminSearch" placeholder="Search product ID, name, brand, vehicle compatibility...">
+        <div class="search-wrap" style="flex: 2; min-width: 260px; display: flex; align-items: center; position: relative;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 1rem;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="search" class="search-input" id="adminSearch" placeholder="Search product ID, name, brand, vehicle compatibility..." style="padding-right: 2.75rem;">
+          <button class="btn btn-ghost scan-btn" id="adminScanBtn" style="position: absolute; right: 0.5rem; border: none; background: transparent; cursor: pointer; font-size: 1.1rem; padding: 0.25rem;" title="Scan Barcode">📷</button>
         </div>
         
         <select class="filter-select" id="adminCategoryFilter" style="flex: 1; min-width: 160px; max-width: 220px;">
@@ -2831,6 +2845,23 @@
         <div id="importProgressBar" style="width: 0%; height: 100%; background: var(--accent); transition: width 0.1s ease;"></div>
       </div>
       <div style="font-size: 0.8rem; text-align: right; color: var(--text-muted);" id="importPercent">0%</div>
+    </div>
+  </div>
+
+  <!-- Barcode Scanner Modal -->
+  <div class="modal-overlay" id="scannerModal">
+    <div class="modal" style="max-width: 450px; padding: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">📷 Scan Barcode / QR Code</h3>
+        <button class="btn btn-ghost btn-sm" id="closeScannerBtn" style="border-radius: 50%; width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center;">✕</button>
+      </div>
+      <div id="scannerReader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000; border: 1px solid var(--border); aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; position: relative;">
+        <!-- Camera viewfinder element -->
+      </div>
+      <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 0.75rem;">
+        <select id="scannerCameraSelect" class="filter-select" style="max-width: 250px; font-size: 0.8rem; padding: 0.5rem 2rem 0.5rem 1rem;"></select>
+      </div>
+      <p style="text-align: center; color: var(--text-muted); font-size: 0.75rem; margin-top: 0.75rem;">Align the barcode within the camera viewfinder to scan.</p>
     </div>
   </div>
 
@@ -3024,6 +3055,7 @@
     let imageIds = new Set();
     let modalImages = [];
     let quickUploadId = null;
+    let adminLowStockFilterActive = false;
 
     // ── Storage ──
     function getEffectiveStock(p) {
@@ -3922,6 +3954,8 @@
       const hasImg = !!imgSrc;
       const partNumVal = p.barcode || p.productId || 'N/A';
       const compatibilityVal = p.fit || 'General Compatibility';
+      const low = isLowStock(p);
+      const lowStockBadge = (low && !oos) ? `<span style="font-size:0.65rem;padding:0.15rem 0.4rem;background:#d97706;color:#fff;border-radius:6px;font-weight:700;margin-left:0.5rem;display:inline-block;vertical-align:middle;letter-spacing:0.02em;">LOW STOCK</span>` : '';
       return `
         <div class="product-card${oos ? ' out-of-stock' : ''}" data-id="${esc(id)}">
           <div class="product-image-wrap" data-img-id="${esc(id)}" data-loaded="${hasImg ? '1' : '0'}" onclick="window.location.hash='#/product/${esc(id)}'" style="cursor:pointer">
@@ -3929,7 +3963,10 @@
               ? `<img src="${imgSrc}" alt="${esc(p.productName)}" loading="lazy">`
               : imagePlaceholderHtml()}
           </div>
-          <div class="product-category">${esc(getStandardCategory(p.category))}</div>
+          <div class="product-category" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.25rem;">
+            <span>${esc(getStandardCategory(p.category))}</span>
+            ${lowStockBadge}
+          </div>
           <div class="product-name" onclick="window.location.hash='#/product/${esc(id)}'" style="cursor:pointer">${esc(p.productName)}</div>
           <div class="product-brand">${esc(p.brand)}</div>
           <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Part No: <span style="font-family:monospace;color:var(--text);">${esc(partNumVal)}</span></div>
@@ -4222,6 +4259,11 @@
         gallery.innerHTML = imagePlaceholderHtml();
       }
 
+      let stockStatus = 'Out of Stock';
+      if (getEffectiveStock(p) > 0) {
+        stockStatus = isLowStock(p) ? 'Low Stock ⚠️' : 'In Stock';
+      }
+
       // Specs
       const specsGrid = document.getElementById('detailsSpecsGrid');
       const specs = [
@@ -4232,7 +4274,7 @@
         { label: 'Barcode', value: p.barcode || 'N/A' },
         { label: 'Sleeve', value: p.sleeve || 'N/A' },
         { label: 'Size', value: p.size || 'Standard' },
-        { label: 'Stock Status', value: getEffectiveStock(p) > 0 ? 'In Stock' : 'Out of Stock' }
+        { label: 'Stock Status', value: stockStatus }
       ];
       specsGrid.innerHTML = specs.map(s => `
         <div class="spec-item">
@@ -4802,7 +4844,9 @@
           const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
           const timeStr = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
           const items = order.items || [];
-          const statusColor = order.status === 'completed' ? 'var(--success, #22c55e)' : order.status === 'cancelled' ? 'var(--danger)' : 'var(--accent)';
+          
+          // Color coding for order statuses
+          const statusBg = order.status === 'completed' ? '#10b981' : order.status === 'cancelled' ? '#ef4444' : '#3b82f6';
 
           return `
             <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;">
@@ -4812,7 +4856,11 @@
                   <span style="color:var(--text-muted);font-size:0.8rem;margin-left:0.5rem;">📞 ${esc(order.customer_phone)}</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:0.75rem;">
-                  <span style="font-size:0.75rem;padding:0.2rem 0.6rem;border-radius:20px;background:${statusColor};color:#fff;font-weight:600;text-transform:uppercase;">${esc(order.status || 'pending')}</span>
+                  <select class="order-status-select" data-order-id="${order.id}" style="font-size:0.75rem;padding:0.25rem 0.6rem;border-radius:20px;background:${statusBg};color:#fff;font-weight:600;border:none;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center;">
+                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''} style="background:var(--bg-card);color:var(--text);">Pending</option>
+                    <option value="completed" ${order.status === 'completed' ? 'selected' : ''} style="background:var(--bg-card);color:var(--text);">Completed</option>
+                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''} style="background:var(--bg-card);color:var(--text);">Cancelled</option>
+                  </select>
                   <span style="color:var(--text-muted);font-size:0.75rem;">${dateStr} ${timeStr}</span>
                 </div>
               </div>
@@ -4828,6 +4876,91 @@
       }
     }
 
+    async function updateOrderStatus(orderId, newStatus) {
+      if (!isCloudSyncActive || !navigator.onLine) {
+        showToast('Requires internet connection to change order status.', 'warning');
+        return;
+      }
+
+      try {
+        // 1. Fetch current order
+        const { data: order, error: fetchErr } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', orderId)
+          .single();
+
+        if (fetchErr) throw fetchErr;
+        const oldStatus = order.status;
+        if (oldStatus === newStatus) return; // no change
+
+        // 2. Update status in database
+        const { error: updateErr } = await supabase
+          .from('orders')
+          .update({ status: newStatus })
+          .eq('id', orderId);
+
+        if (updateErr) throw updateErr;
+
+        showToast(`Order status updated to: ${newStatus}`, 'success');
+
+        // 3. Handle stock restoration on cancel, or stock deduction on un-cancel
+        const items = order.items || [];
+        let stockChanged = false;
+
+        if (newStatus === 'cancelled' && oldStatus !== 'cancelled') {
+          // Add items back to stock
+          for (const item of items) {
+            const prod = products.find(x => x.productId === String(item.productId));
+            if (prod) {
+              const currentStock = parseInt(prod.stockQty || prod.quantity || '0', 10);
+              const newStock = currentStock + parseInt(item.qty || 1, 10);
+              prod.stockQty = String(newStock);
+              prod.quantity = String(newStock);
+              stockChanged = true;
+
+              // Save in Supabase
+              await supabase.from('products')
+                .update({ stock_qty: newStock, quantity: newStock })
+                .eq('product_id', item.productId)
+                .catch(err => console.error('[Orders Sync] Failed to return stock:', err));
+            }
+          }
+          showToast('Stock returned to inventory.', 'info');
+        } else if (oldStatus === 'cancelled' && newStatus !== 'cancelled') {
+          // Deduct items from stock again
+          for (const item of items) {
+            const prod = products.find(x => x.productId === String(item.productId));
+            if (prod) {
+              const currentStock = parseInt(prod.stockQty || prod.quantity || '0', 10);
+              const newStock = Math.max(0, currentStock - parseInt(item.qty || 1, 10));
+              prod.stockQty = String(newStock);
+              prod.quantity = String(newStock);
+              stockChanged = true;
+
+              // Save in Supabase
+              await supabase.from('products')
+                .update({ stock_qty: newStock, quantity: newStock })
+                .eq('product_id', item.productId)
+                .catch(err => console.error('[Orders Sync] Failed to deduct stock:', err));
+            }
+          }
+          showToast('Stock deducted from inventory.', 'info');
+        }
+
+        if (stockChanged) {
+          saveProducts();
+          renderAdminTable();
+          renderCatalog();
+        }
+
+        loadOrderHistory(); // Refresh view
+      } catch (err) {
+        console.error('[Orders] Failed to update order status:', err);
+        showToast('Error: ' + err.message, 'error');
+      }
+    }
+
     // ── Admin Panel ──
     function renderAdminTable() {
       const search = document.getElementById('adminSearch').value.toLowerCase().trim();
@@ -4840,6 +4973,7 @@
         const matchCat = !category || p.category === category;
         if (!matchCat) return false;
         if (noImageOnly && imageIds.has(String(p.productId))) return false;
+        if (adminLowStockFilterActive && !isLowStock(p)) return false;
         if (!search) return true;
         return COLUMNS.some(col => String(p[col] || '').toLowerCase().includes(search));
       });
@@ -4850,6 +4984,29 @@
       document.getElementById('statTotalProducts').textContent = products.length.toLocaleString();
       document.getElementById('statLowStock').textContent = lowCount.toLocaleString();
       document.getElementById('statNoImages').textContent = noImgCount.toLocaleString();
+
+      // Highlight cards if filters are active
+      const lowStockCard = document.getElementById('statCardLowStock');
+      if (lowStockCard) {
+        if (adminLowStockFilterActive) {
+          lowStockCard.style.border = '2px solid #ef4444';
+          lowStockCard.style.background = 'rgba(239, 68, 68, 0.08)';
+        } else {
+          lowStockCard.style.border = '1px solid var(--border)';
+          lowStockCard.style.background = '';
+        }
+      }
+
+      const noImagesCard = document.getElementById('statCardNoImages');
+      if (noImagesCard) {
+        if (noImageOnly) {
+          noImagesCard.style.border = '2px solid var(--text-muted)';
+          noImagesCard.style.background = 'var(--bg-elevated)';
+        } else {
+          noImagesCard.style.border = '1px solid var(--border)';
+          noImagesCard.style.background = '';
+        }
+      }
 
       // Support Focused vs All Columns toggle
       const visibleCols = showAllAdminColumns ? COLUMNS : ['productId', 'productName', 'category', 'brand', 'retailPrice', 'stockQty', 'quantity', 'fit'];
@@ -5176,6 +5333,21 @@
           showToast('Cannot delete products while offline.', 'error');
           return;
         }
+
+        // Auto-delete product images from Supabase Storage on product deletion
+        const prod = products.find(p => p.productId === id);
+        if (prod && prod.image_urls && Array.isArray(prod.image_urls) && prod.image_urls.length > 0) {
+          showToast('Cleaning up cloud images...', 'info');
+          const filePaths = prod.image_urls.map(url => {
+            const parts = url.split('/product-images/');
+            return parts.length > 1 ? decodeURIComponent(parts[parts.length - 1]) : null;
+          }).filter(Boolean);
+          if (filePaths.length > 0) {
+            const { error: storageErr } = await supabase.storage.from('product-images').remove(filePaths);
+            if (storageErr) console.warn('[Storage] Failed to delete files during product deletion:', storageErr);
+          }
+        }
+
         showToast('Deleting from cloud database...', 'info');
         const { error } = await supabase
           .from('products')
@@ -5198,6 +5370,107 @@
       renderCatalog();
       updateCartBadge();
       showToast('Product deleted successfully', 'success');
+    }
+
+    // ── Barcode & QR Code Camera Scanner ──
+    let html5QrCode = null;
+    let scannerActiveInputId = null;
+
+    async function startScanner(inputId) {
+      scannerActiveInputId = inputId;
+      document.getElementById('scannerModal').classList.add('open');
+      const reader = document.getElementById('scannerReader');
+      reader.innerHTML = '<div style="color:var(--text-muted);padding:2rem;text-align:center;">Initializing camera...</div>';
+      
+      const cameraSelect = document.getElementById('scannerCameraSelect');
+      cameraSelect.innerHTML = '<option value="">Detecting cameras...</option>';
+
+      try {
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length > 0) {
+          cameraSelect.innerHTML = devices.map((d, index) => 
+            `<option value="${d.id}" ${index === 0 || d.label.toLowerCase().includes('back') ? 'selected' : ''}>${esc(d.label || `Camera ${index + 1}`)}</option>`
+          ).join('');
+          
+          const selectedCameraId = cameraSelect.value || devices[0].id;
+          initQrCodeScanner(selectedCameraId);
+          
+          cameraSelect.onchange = () => {
+            if (html5QrCode) {
+              html5QrCode.stop().then(() => {
+                initQrCodeScanner(cameraSelect.value);
+              }).catch(err => console.error('[Scanner] Stop before switch failed:', err));
+            }
+          };
+        } else {
+          reader.innerHTML = '<p style="color:var(--danger);padding:2rem;text-align:center;">No camera devices found.</p>';
+        }
+      } catch (err) {
+        console.error('[Scanner] getCameras failed:', err);
+        reader.innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center;">Camera access denied or error: ${err.message || err}</p>`;
+      }
+    }
+
+    function initQrCodeScanner(cameraId) {
+      const reader = document.getElementById('scannerReader');
+      reader.innerHTML = ''; // Clear loading message
+
+      try {
+        html5QrCode = new Html5Qrcode("scannerReader");
+        html5QrCode.start(
+          cameraId,
+          {
+            fps: 15,
+            qrbox: (width, height) => {
+              // Custom scan area - wide rectangle for barcodes
+              return { width: Math.min(width * 0.85, 280), height: Math.min(height * 0.5, 120) };
+            },
+            aspectRatio: 1.333334
+          },
+          (decodedText) => {
+            console.log('[Scanner] Decoded text:', decodedText);
+            const input = document.getElementById(scannerActiveInputId);
+            if (input) {
+              input.value = decodedText.trim();
+              
+              // Dispatch change and input events to trigger search filtering
+              input.dispatchEvent(new Event('input', { bubbles: true }));
+              input.dispatchEvent(new Event('change', { bubbles: true }));
+              
+              // Direct actions depending on source
+              if (scannerActiveInputId === 'heroSearchInput') {
+                document.getElementById('heroSearchBtn').click();
+              } else if (scannerActiveInputId === 'masterSearch') {
+                renderAllProductsView(true);
+              } else if (scannerActiveInputId === 'adminSearch') {
+                renderAdminTable();
+              }
+            }
+            showToast(`Code scanned successfully!`, 'success');
+            stopScanner();
+          },
+          (errorMessage) => {
+            // frame read callbacks are regular, keeping silent
+          }
+        ).catch(err => {
+          console.error('[Scanner] Start failed:', err);
+          reader.innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center;">Failed to start camera feed: ${err.message || err}</p>`;
+        });
+      } catch (e) {
+        console.error('[Scanner] Init error:', e);
+        reader.innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center;">Scanner initialization failed: ${e.message || e}</p>`;
+      }
+    }
+
+    function stopScanner() {
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          html5QrCode.clear();
+          html5QrCode = null;
+        }).catch(err => console.error('[Scanner] Stop failed:', err));
+      }
+      document.getElementById('scannerModal').classList.remove('open');
+      scannerActiveInputId = null;
     }
 
     // ── Unified Backup Export & Restore ──
@@ -5712,6 +5985,45 @@
       // Bind Cloud Sync actions
       document.getElementById('cloudSyncBtn').addEventListener('click', () => syncCatalogFromSupabase(true));
       document.getElementById('migrateImagesBtn').addEventListener('click', migrateLocalImagesToSupabase);
+
+      // Barcode Scanner Controls
+      document.getElementById('heroScanBtn').addEventListener('click', () => startScanner('heroSearchInput'));
+      document.getElementById('masterScanBtn').addEventListener('click', () => startScanner('masterSearch'));
+      document.getElementById('adminScanBtn').addEventListener('click', () => startScanner('adminSearch'));
+      document.getElementById('closeScannerBtn').addEventListener('click', stopScanner);
+      document.getElementById('scannerModal').addEventListener('click', e => {
+        if (e.target.id === 'scannerModal') stopScanner();
+      });
+
+      // Dashboard Stats Cards Click Toggles
+      document.getElementById('statCardTotalProducts').addEventListener('click', () => {
+        document.getElementById('adminSearch').value = '';
+        document.getElementById('adminCategoryFilter').value = '';
+        document.getElementById('noImageFilter').checked = false;
+        adminLowStockFilterActive = false;
+        renderAdminTable();
+      });
+      document.getElementById('statCardLowStock').addEventListener('click', () => {
+        adminLowStockFilterActive = !adminLowStockFilterActive;
+        renderAdminTable();
+      });
+      document.getElementById('statCardNoImages').addEventListener('click', () => {
+        const checkbox = document.getElementById('noImageFilter');
+        checkbox.checked = !checkbox.checked;
+        renderAdminTable();
+      });
+
+      // Order Status Selector Delegation
+      const orderHistoryList = document.getElementById('orderHistoryList');
+      if (orderHistoryList) {
+        orderHistoryList.addEventListener('change', e => {
+          if (e.target.classList.contains('order-status-select')) {
+            const orderId = e.target.dataset.orderId;
+            const newStatus = e.target.value;
+            updateOrderStatus(orderId, newStatus);
+          }
+        });
+      }
     }
 
     init();
