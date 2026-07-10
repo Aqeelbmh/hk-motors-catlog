@@ -6128,7 +6128,11 @@
         if (pw === ADMIN_PASSWORD) {
           isAdmin = true;
           document.getElementById('passwordModal').classList.remove('open');
-          window.location.hash = '#/admin';
+          if (window.location.hash === '#/admin') {
+            handleRoute();
+          } else {
+            window.location.hash = '#/admin';
+          }
         } else {
           document.getElementById('passwordError').style.display = 'block';
         }
