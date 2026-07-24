@@ -2849,7 +2849,10 @@
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" class="form-input" id="adminPassword" placeholder="Enter password">
+        <div style="position: relative; display: flex; align-items: center;">
+          <input type="password" class="form-input" id="adminPassword" placeholder="Enter password" style="padding-right: 2.75rem; width: 100%;">
+          <button type="button" id="togglePasswordVisibility" style="position: absolute; right: 0.5rem; background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 0.25rem; color: var(--text-muted);" title="Toggle password visibility">👁️</button>
+        </div>
       </div>
       <p id="passwordError" style="color:var(--danger);font-size:0.8rem;display:none;margin-top:0.5rem">Incorrect password</p>
       <div class="modal-actions">
@@ -4521,9 +4524,13 @@
         } else {
           // Trigger password prompt
           document.getElementById('passwordModal').classList.add('open');
-          document.getElementById('adminPassword').value = '';
+          const pwInput = document.getElementById('adminPassword');
+          pwInput.value = '';
+          pwInput.type = 'password';
+          const toggleBtn = document.getElementById('togglePasswordVisibility');
+          if (toggleBtn) toggleBtn.textContent = '👁️';
           document.getElementById('passwordError').style.display = 'none';
-          setTimeout(() => document.getElementById('adminPassword').focus(), 100);
+          setTimeout(() => pwInput.focus(), 100);
         }
       } else {
         window.location.hash = '#/home';
@@ -6123,8 +6130,20 @@
         window.location.hash = '#/home';
       });
 
+      document.getElementById('togglePasswordVisibility').addEventListener('click', () => {
+        const pwInput = document.getElementById('adminPassword');
+        const btn = document.getElementById('togglePasswordVisibility');
+        if (pwInput.type === 'password') {
+          pwInput.type = 'text';
+          btn.textContent = '🙈';
+        } else {
+          pwInput.type = 'password';
+          btn.textContent = '👁️';
+        }
+      });
+
       document.getElementById('passwordSubmit').addEventListener('click', () => {
-        const pw = document.getElementById('adminPassword').value;
+        const pw = (document.getElementById('adminPassword').value || '').trim();
         if (pw === ADMIN_PASSWORD) {
           isAdmin = true;
           document.getElementById('passwordModal').classList.remove('open');
