@@ -1,4 +1,4 @@
-const CACHE_NAME = 'HKMOTORS-V10';
+const CACHE_NAME = 'HKMOTORS-V11';
 
 const PRECACHE_ASSETS = [
   './',
@@ -16,6 +16,15 @@ const PRECACHE_ASSETS = [
   'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
 ];
 
+function isAppShellRequest(request, url) {
+  if (request.mode === 'navigate') return true;
+  const path = url.pathname;
+  return path.endsWith('/') ||
+    path.endsWith('/index.html') ||
+    path.endsWith('/service-worker.js') ||
+    path.endsWith('/supabase-config.js');
+}
+
 // Install event: Pre-cache core shell resources
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -28,7 +37,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate event: Clean up old caches
+// Activate event: Clean up old caches and take control immediately
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -44,27 +53,28 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch event: Serve cached items or fetch and dynamically cache
+// Fetch event: Network-first for HTML/app shell so updates appear; cache-first for static assets
 self.addEventListener('fetch', event => {
-  // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // Network-First for products.json to support cloud sync when online
-  if (url.pathname.endsWith('products.json')) {
+  // Always network-first for app shell / HTML / SW / config so deployments show up
+  if (isAppShellRequest(event.request, url) || url.pathname.endsWith('products.json')) {
     event.respondWith(
       fetch(event.request)
         .then(response => {
-          if (response.ok) {
+          if (response && response.ok) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
           }
           return response;
         })
         .catch(() => {
-          console.log('[Service Worker] Offline fallback for products.json');
-          return caches.match(event.request);
+          console.log('[Service Worker] Offline fallback for', url.pathname);
+          return caches.match(event.request).then(cached => {
+            return cached || caches.match('./index.html');
+          });
         })
     );
     return;
@@ -74,19 +84,22 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
       if (cachedResponse) {
-        // Return cached resource immediately
+        // Stale-while-revalidate: return cache, refresh in background
+        fetch(event.request).then(response => {
+          if (response && response.status === 200 && (response.type === 'basic' || url.host.includes('fonts.googleapis.com') || url.host.includes('fonts.gstatic.com') || url.host.includes('cdn.jsdelivr.net'))) {
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+          }
+        }).catch(() => {});
         return cachedResponse;
       }
 
       return fetch(event.request).then(response => {
-        // If valid, cache it dynamically (e.g. Google Fonts files)
         if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, responseToCache);
           });
         }
-        // Handle cross-origin resources like google fonts
         if (response && response.status === 200 && (url.host.includes('fonts.googleapis.com') || url.host.includes('fonts.gstatic.com'))) {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then(cache => {
@@ -95,7 +108,6 @@ self.addEventListener('fetch', event => {
         }
         return response;
       }).catch(() => {
-        // Catch-all for offline fallback (e.g. dynamic page assets)
         if (event.request.mode === 'navigate') {
           return caches.match('./index.html');
         }
@@ -104,7 +116,6 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Listener for message from clients to trigger updates
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
