@@ -140,9 +140,12 @@
     html {
       width: 100%;
       max-width: 100%;
-      overflow-x: hidden;
+      /* Avoid overflow-x:hidden on html — it breaks position:fixed/sticky on mobile browsers */
+      overflow-x: clip;
       overflow-y: auto;
       scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
     body {
@@ -151,14 +154,17 @@
       font-family: 'Inter', 'Noto Sans Sinhala', 'Noto Sans Tamil', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
+      min-height: 100dvh;
       min-height: 100vh;
       line-height: 1.5;
-      overflow-x: hidden;
+      overflow-x: clip;
       overflow-y: visible;
       overscroll-behavior-y: auto;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       transition: background-color 0.25s ease, color 0.25s ease;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
     }
 
     button, .btn, .lang-btn, .theme-toggle, .nav-link, .mobile-nav a {
@@ -181,18 +187,22 @@
     .header {
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 400;
       background: var(--header-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
-      height: var(--header-h);
+      /* Include notch/safe-area so header content is never clipped on phones */
+      height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
+      min-height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 1.5rem;
+      padding: env(safe-area-inset-top, 0px) 1.5rem 0;
       gap: 0.75rem;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .logo {
@@ -1391,7 +1401,28 @@
 
     @media (max-width: 768px) {
       .nav-links {
-        display: none; /* Hide standard links on mobile */
+        display: none; /* Hide standard links on mobile — bottom bar is used instead */
+      }
+      .header-right {
+        margin-left: auto;
+      }
+      .logo-text {
+        min-width: 0;
+      }
+    }
+
+    /* Compact desktop/tablet header so nav stays visible on laptops */
+    @media (min-width: 769px) and (max-width: 1100px) {
+      .nav-links {
+        gap: 0.85rem;
+        margin-left: 1rem;
+      }
+      .nav-link {
+        font-size: 0.85rem;
+      }
+      .header {
+        padding-left: 1rem;
+        padding-right: 1rem;
       }
     }
 
@@ -2107,26 +2138,45 @@
       bottom: 0;
       left: 0;
       right: 0;
-      z-index: 90;
+      z-index: 450;
       background: var(--mobile-nav-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-top: 1px solid var(--border);
-      padding: 0.35rem 0.5rem calc(0.35rem + env(safe-area-inset-bottom));
+      padding: 0.4rem 0.35rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
       justify-content: space-around;
-      gap: 0.25rem;
+      align-items: stretch;
+      gap: 0.2rem;
+      box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.18);
+      /* Keep nav above iOS Safari chrome / keyboard layout quirks */
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
     }
 
     .mobile-nav a {
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.15rem;
       text-align: center;
       color: var(--text-muted);
       text-decoration: none;
       font-size: 0.68rem;
       font-weight: 600;
-      padding: 0.45rem 0.25rem;
+      padding: 0.45rem 0.2rem;
       border-radius: 10px;
       transition: all 0.2s;
+      min-height: 52px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .mobile-nav a .nav-ico {
+      font-size: 1.05rem;
+      line-height: 1;
+      pointer-events: none;
     }
 
     .mobile-nav a.active {
@@ -2135,9 +2185,10 @@
     }
 
     @media (max-width: 768px) {
-      .mobile-nav { display: flex; }
-      body { padding-bottom: 4.5rem; }
-      .fab-cart { bottom: 5rem; }
+      .mobile-nav { display: flex !important; }
+      body { padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)); }
+      .fab-cart { bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)); }
+      .toast { bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)); }
     }
 
 
@@ -2438,8 +2489,8 @@
        ═══════════════════════════════════════════════════════════════ */
     html, body {
       width: 100%;
-      max-width: 100vw;
-      overflow-x: hidden;
+      max-width: 100%;
+      overflow-x: clip;
     }
 
     /* Core Container Alignment */
@@ -3116,7 +3167,7 @@
         <div class="form-group">
           <label>Password</label>
           <div style="position: relative; display: flex; align-items: center;">
-            <input type="password" class="form-input" id="adminPassword" placeholder="Enter password" style="padding-right: 2.75rem; width: 100%;" autocomplete="current-password">
+            <input type="password" class="form-input" id="adminPassword" placeholder="Enter password" style="padding-right: 2.75rem; width: 100%;" autocomplete="current-password" enterkeyhint="go">
             <button type="button" id="togglePasswordVisibility" style="position: absolute; right: 0.5rem; background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 0.25rem; color: var(--text-muted);" title="Toggle password visibility">👁️</button>
           </div>
         </div>
@@ -3205,6 +3256,13 @@
     <p data-i18n="footerText">© HK Motors — Quality Auto Spare Parts</p>
     <button type="button" class="admin-link" id="adminLinkBtn" aria-label="Admin panel">Admin</button>
   </footer>
+
+  <nav class="mobile-nav" aria-label="Mobile navigation">
+    <a href="#/home" class="mobile-nav-link" data-hash="#/home"><span class="nav-ico" aria-hidden="true">🏠</span>Home</a>
+    <a href="#/categories" class="mobile-nav-link" data-hash="#/categories"><span class="nav-ico" aria-hidden="true">📂</span>Categories</a>
+    <a href="#/products" class="mobile-nav-link" data-hash="#/products"><span class="nav-ico" aria-hidden="true">🔧</span>Products</a>
+    <a href="#/admin" class="mobile-nav-link" data-hash="#/admin"><span class="nav-ico" aria-hidden="true">⚙️</span>Admin</a>
+  </nav>
 
   <div class="toast" id="toast"></div>
   
@@ -3774,12 +3832,19 @@
       try {
         if (isManual) showToast('Syncing catalog from Supabase...', 'info');
         console.log('[Sync] Fetching latest products list from Supabase...');
+
+        const syncTimeoutMs = 45000;
+        const withTimeout = (promise, label) => Promise.race([
+          promise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error(label + ' timed out')), syncTimeoutMs))
+        ]);
         
         // Fetch ALL products from Supabase with robust pagination
         // First, get the exact total count
-        const { count: totalCount, error: countErr } = await supabase
-          .from('products')
-          .select('*', { count: 'exact', head: true });
+        const { count: totalCount, error: countErr } = await withTimeout(
+          supabase.from('products').select('*', { count: 'exact', head: true }),
+          'Count query'
+        );
 
         if (countErr) console.warn('[Sync] Could not get exact count:', countErr);
         else console.log(`[Sync] Supabase reports ${totalCount} total products.`);
@@ -3792,11 +3857,10 @@
         
         while (hasMore) {
           pageNum++;
-          const { data, error } = await supabase
-            .from('products')
-            .select('*')
-            .order('product_id')
-            .range(from, from + limit - 1);
+          const { data, error } = await withTimeout(
+            supabase.from('products').select('*').order('product_id').range(from, from + limit - 1),
+            'Page ' + pageNum
+          );
 
           if (error) throw error;
 
@@ -4729,7 +4793,11 @@
     }
 
     function renderCatalog() {
-      // Legacy compatibility wrapper: re-renders whatever view we're on
+      // Do not interrupt an in-progress admin login (sync used to clear the password field)
+      const pwModal = document.getElementById('passwordModal');
+      if (pwModal && pwModal.classList.contains('open') && !isAdmin) {
+        return;
+      }
       handleRoute();
     }
 
@@ -4789,15 +4857,19 @@
         if (isAdmin) {
           showView('admin');
         } else {
-          // Trigger password prompt
-          document.getElementById('passwordModal').classList.add('open');
+          // Trigger password prompt — do not wipe the field if the user is already typing
+          const modal = document.getElementById('passwordModal');
+          const alreadyOpen = modal.classList.contains('open');
+          modal.classList.add('open');
           const pwInput = document.getElementById('adminPassword');
-          pwInput.value = '';
-          pwInput.type = 'password';
-          const toggleBtn = document.getElementById('togglePasswordVisibility');
-          if (toggleBtn) toggleBtn.textContent = '👁️';
-          document.getElementById('passwordError').style.display = 'none';
-          setTimeout(() => pwInput.focus(), 100);
+          if (!alreadyOpen) {
+            pwInput.value = '';
+            pwInput.type = 'password';
+            const toggleBtn = document.getElementById('togglePasswordVisibility');
+            if (toggleBtn) toggleBtn.textContent = '👁️';
+            document.getElementById('passwordError').style.display = 'none';
+            setTimeout(() => pwInput.focus(), 100);
+          }
         }
       } else {
         window.location.hash = '#/home';
@@ -6228,6 +6300,102 @@
       reader.readAsText(file);
     }
 
+    // ── Critical UI bindings (must run before slow network sync) ──
+    function bindCriticalNavigation() {
+      const processAdminLogin = (e) => {
+        if (e) e.preventDefault();
+        const pwInput = document.getElementById('adminPassword');
+        const pw = (pwInput && pwInput.value ? pwInput.value : '').trim();
+        if (pw === ADMIN_PASSWORD) {
+          isAdmin = true;
+          sessionStorage.setItem('hkmotors_admin_auth', 'true');
+          document.getElementById('passwordModal').classList.remove('open');
+          document.getElementById('passwordError').style.display = 'none';
+          showView('admin');
+          if (window.location.hash !== '#/admin') {
+            window.location.hash = '#/admin';
+          } else {
+            handleRoute();
+          }
+          showToast('Admin access granted.', 'success');
+        } else {
+          document.getElementById('passwordError').style.display = 'block';
+          if (pwInput) {
+            pwInput.focus();
+            pwInput.select();
+          }
+        }
+      };
+
+      const adminLoginForm = document.getElementById('adminLoginForm');
+      if (adminLoginForm && !adminLoginForm.dataset.bound) {
+        adminLoginForm.dataset.bound = '1';
+        adminLoginForm.addEventListener('submit', processAdminLogin);
+      }
+
+      const passwordSubmit = document.getElementById('passwordSubmit');
+      if (passwordSubmit && !passwordSubmit.dataset.bound) {
+        passwordSubmit.dataset.bound = '1';
+        // Keep click as backup for browsers that mishandle submit inside overlays
+        passwordSubmit.addEventListener('click', processAdminLogin);
+      }
+
+      const passwordCancel = document.getElementById('passwordCancel');
+      if (passwordCancel && !passwordCancel.dataset.bound) {
+        passwordCancel.dataset.bound = '1';
+        passwordCancel.addEventListener('click', () => {
+          document.getElementById('passwordModal').classList.remove('open');
+          window.location.hash = '#/home';
+        });
+      }
+
+      const togglePw = document.getElementById('togglePasswordVisibility');
+      if (togglePw && !togglePw.dataset.bound) {
+        togglePw.dataset.bound = '1';
+        togglePw.addEventListener('click', () => {
+          const pwInput = document.getElementById('adminPassword');
+          const btn = document.getElementById('togglePasswordVisibility');
+          if (pwInput.type === 'password') {
+            pwInput.type = 'text';
+            btn.textContent = '🙈';
+          } else {
+            pwInput.type = 'password';
+            btn.textContent = '👁️';
+          }
+        });
+      }
+
+      const triggerAdminRoute = (e) => {
+        if (e) e.preventDefault();
+        if (window.location.hash === '#/admin') {
+          handleRoute();
+        } else {
+          window.location.hash = '#/admin';
+        }
+      };
+
+      const adminLinkBtn = document.getElementById('adminLinkBtn');
+      if (adminLinkBtn && !adminLinkBtn.dataset.bound) {
+        adminLinkBtn.dataset.bound = '1';
+        adminLinkBtn.addEventListener('click', triggerAdminRoute);
+      }
+      const navAdminLink = document.getElementById('navAdminLink');
+      if (navAdminLink && !navAdminLink.dataset.bound) {
+        navAdminLink.dataset.bound = '1';
+        navAdminLink.addEventListener('click', triggerAdminRoute);
+      }
+      document.querySelectorAll('a[href="#/admin"]').forEach(el => {
+        if (el.dataset.bound) return;
+        el.dataset.bound = '1';
+        el.addEventListener('click', triggerAdminRoute);
+      });
+
+      if (!window.__hkmotorsHashBound) {
+        window.__hkmotorsHashBound = true;
+        window.addEventListener('hashchange', handleRoute);
+      }
+    }
+
     // ── Event Listeners ──
     async function init() {
       // Register service worker if supported
@@ -6302,15 +6470,27 @@
         updateOnlineStatus();
       }
 
-      await loadProducts();
-      await loadImageIndex();
-      loadCart(); // Restore cart from localStorage
-      currentLang = localStorage.getItem(LANG_KEY) || 'en';
-      applyLanguage();
+      // Enable nav + admin login immediately (do not wait for cloud sync ~20-30s)
+      bindCriticalNavigation();
+      handleRoute();
 
-      // Trigger automatic cloud database sync on startup if online
-      if (isCloudSyncActive && navigator.onLine) {
-        await syncCatalogFromSupabase(false);
+      try {
+        await loadProducts();
+        await loadImageIndex();
+        loadCart(); // Restore cart from localStorage
+        currentLang = localStorage.getItem(LANG_KEY) || 'en';
+        applyLanguage();
+        handleRoute(); // refresh views with loaded catalog
+
+        // Background cloud sync — never block login / navigation
+        if (isCloudSyncActive && navigator.onLine) {
+          syncCatalogFromSupabase(false).catch(err => {
+            console.error('[Init] Background sync failed:', err);
+          });
+        }
+      } catch (err) {
+        console.error('[Init] Startup data load failed:', err);
+        showToast('Catalog loaded with limited data. You can still browse offline.', 'warning');
       }
 
       document.getElementById('themeToggle').addEventListener('click', toggleTheme);
@@ -6323,11 +6503,6 @@
           applyLanguage();
         });
       });
-
-      // Hash Routing Listeners
-      window.addEventListener('hashchange', handleRoute);
-      // Run once on load to route to current hash
-      handleRoute();
 
       // Hero Search Actions
       document.getElementById('heroSearchBtn').addEventListener('click', () => {
@@ -6429,65 +6604,12 @@
         document.getElementById('orderHistorySection').style.display = 'none';
       });
 
-      // Admin Login Modal Actions & Navigation Handlers
-      document.getElementById('passwordCancel').addEventListener('click', () => {
-        document.getElementById('passwordModal').classList.remove('open');
-        window.location.hash = '#/home';
-      });
-
-      document.getElementById('togglePasswordVisibility').addEventListener('click', () => {
-        const pwInput = document.getElementById('adminPassword');
-        const btn = document.getElementById('togglePasswordVisibility');
-        if (pwInput.type === 'password') {
-          pwInput.type = 'text';
-          btn.textContent = '🙈';
-        } else {
-          pwInput.type = 'password';
-          btn.textContent = '👁️';
-        }
-      });
-
-      const processAdminLogin = (e) => {
-        if (e) e.preventDefault();
-        const pw = (document.getElementById('adminPassword').value || '').trim();
-        if (pw === ADMIN_PASSWORD) {
-          isAdmin = true;
-          sessionStorage.setItem('hkmotors_admin_auth', 'true');
-          document.getElementById('passwordModal').classList.remove('open');
-          showView('admin');
-          if (window.location.hash !== '#/admin') {
-            window.location.hash = '#/admin';
-          }
-        } else {
-          document.getElementById('passwordError').style.display = 'block';
-        }
-      };
-
-      const adminLoginForm = document.getElementById('adminLoginForm');
-      if (adminLoginForm) {
-        adminLoginForm.addEventListener('submit', processAdminLogin);
-      }
-      document.getElementById('passwordSubmit').addEventListener('click', processAdminLogin);
-
+      // Admin logout (login/nav already bound in bindCriticalNavigation)
       document.getElementById('adminLogout').addEventListener('click', () => {
         isAdmin = false;
         sessionStorage.removeItem('hkmotors_admin_auth');
         window.location.hash = '#/home';
       });
-
-      const triggerAdminRoute = (e) => {
-        if (e) e.preventDefault();
-        if (window.location.hash === '#/admin') {
-          handleRoute();
-        } else {
-          window.location.hash = '#/admin';
-        }
-      };
-
-      document.getElementById('adminLinkBtn').addEventListener('click', triggerAdminRoute);
-      const navAdminLink = document.getElementById('navAdminLink');
-      if (navAdminLink) navAdminLink.addEventListener('click', triggerAdminRoute);
-      document.querySelectorAll('a[href="#/admin"]').forEach(el => el.addEventListener('click', triggerAdminRoute));
 
       // Admin Table Controls
       document.getElementById('adminSearch').addEventListener('input', renderAdminTable);
@@ -6632,13 +6754,6 @@
     init();
   })();
   </script>
-
-  <nav class="mobile-nav" aria-label="Mobile navigation">
-    <a href="#/home" class="mobile-nav-link" data-hash="#/home">Home</a>
-    <a href="#/categories" class="mobile-nav-link" data-hash="#/categories">Categories</a>
-    <a href="#/products" class="mobile-nav-link" data-hash="#/products">Products</a>
-    <a href="#/admin" class="mobile-nav-link" data-hash="#/admin">Admin</a>
-  </nav>
 
 </body>
 </html>
