@@ -5811,96 +5811,134 @@
 
     async function startScanner(inputId) {
       scannerActiveInputId = inputId;
-      document.getElementById('scannerModal').classList.add('open');
+      const modal = document.getElementById('scannerModal');
+      modal.classList.add('open');
       const reader = document.getElementById('scannerReader');
-      reader.innerHTML = '<div style="color:var(--text-muted);padding:2rem;text-align:center;">Initializing camera...</div>';
-      
       const cameraSelect = document.getElementById('scannerCameraSelect');
-      cameraSelect.innerHTML = '<option value="">Detecting cameras...</option>';
+      
+      reader.innerHTML = '<div style="color:var(--text-muted);padding:2rem;text-align:center;">Requesting camera access...</div>';
+      cameraSelect.innerHTML = '<option value="environment">Rear Camera (Default)</option>';
 
-      try {
-        const devices = await Html5Qrcode.getCameras();
-        if (devices && devices.length > 0) {
-          cameraSelect.innerHTML = devices.map((d, index) => 
-            `<option value="${d.id}" ${index === 0 || d.label.toLowerCase().includes('back') ? 'selected' : ''}>${esc(d.label || `Camera ${index + 1}`)}</option>`
-          ).join('');
-          
-          const selectedCameraId = cameraSelect.value || devices[0].id;
-          initQrCodeScanner(selectedCameraId);
-          
-          cameraSelect.onchange = () => {
-            if (html5QrCode) {
-              html5QrCode.stop().then(() => {
-                initQrCodeScanner(cameraSelect.value);
-              }).catch(err => console.error('[Scanner] Stop before switch failed:', err));
-            }
-          };
-        } else {
-          reader.innerHTML = '<p style="color:var(--danger);padding:2rem;text-align:center;">No camera devices found.</p>';
-        }
-      } catch (err) {
-        console.error('[Scanner] getCameras failed:', err);
-        reader.innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center;">Camera access denied or error: ${err.message || err}</p>`;
+      if (typeof Html5Qrcode === 'undefined') {
+        reader.innerHTML = '<p style="color:var(--danger);padding:1.5rem;text-align:center;font-size:0.85rem;">Barcode scanner library failed to load.<br><span style="font-size:0.75rem;color:var(--text-muted);">Check your internet connection and refresh.</span></p>';
+        return;
       }
-    }
 
-    function initQrCodeScanner(cameraId) {
-      const reader = document.getElementById('scannerReader');
-      reader.innerHTML = ''; // Clear loading message
+      // Stop any existing scanner cleanly
+      if (html5QrCode) {
+        try {
+          if (html5QrCode.isScanning) {
+            await html5QrCode.stop();
+          }
+          html5QrCode.clear();
+        } catch (e) {}
+        html5QrCode = null;
+      }
 
       try {
         html5QrCode = new Html5Qrcode("scannerReader");
-        html5QrCode.start(
-          cameraId,
-          {
-            fps: 15,
-            qrbox: (width, height) => {
-              // Custom scan area - wide rectangle for barcodes
-              return { width: Math.min(width * 0.85, 280), height: Math.min(height * 0.5, 120) };
-            },
-            aspectRatio: 1.333334
-          },
-          (decodedText) => {
-            console.log('[Scanner] Decoded text:', decodedText);
-            const input = document.getElementById(scannerActiveInputId);
-            if (input) {
-              input.value = decodedText.trim();
-              
-              // Dispatch change and input events to trigger search filtering
-              input.dispatchEvent(new Event('input', { bubbles: true }));
-              input.dispatchEvent(new Event('change', { bubbles: true }));
-              
-              // Direct actions depending on source
-              if (scannerActiveInputId === 'heroSearchInput') {
-                document.getElementById('heroSearchBtn').click();
-              } else if (scannerActiveInputId === 'masterSearch') {
-                renderAllProductsView(true);
-              } else if (scannerActiveInputId === 'adminSearch') {
-                renderAdminTable();
+
+        // 1. Try starting with Environment (Back camera) first - works reliably across mobile browsers
+        await runQrScanner({ facingMode: "environment" });
+
+        // 2. Populate camera selector once stream/permission is active
+        try {
+          const devices = await Html5Qrcode.getCameras();
+          if (devices && devices.length > 0) {
+            cameraSelect.innerHTML = devices.map((d, index) => 
+              `<option value="${d.id}" ${d.label.toLowerCase().includes('back') || index === 0 ? 'selected' : ''}>${esc(d.label || `Camera ${index + 1}`)}</option>`
+            ).join('');
+
+            cameraSelect.onchange = async () => {
+              if (html5QrCode && cameraSelect.value) {
+                try {
+                  if (html5QrCode.isScanning) {
+                    await html5QrCode.stop();
+                  }
+                  await runQrScanner(cameraSelect.value);
+                } catch (err) {
+                  console.error('[Scanner] Switch camera failed:', err);
+                }
               }
-            }
-            showToast(`Code scanned successfully!`, 'success');
-            stopScanner();
-          },
-          (errorMessage) => {
-            // frame read callbacks are regular, keeping silent
+            };
           }
-        ).catch(err => {
-          console.error('[Scanner] Start failed:', err);
-          reader.innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center;">Failed to start camera feed: ${err.message || err}</p>`;
-        });
-      } catch (e) {
-        console.error('[Scanner] Init error:', e);
-        reader.innerHTML = `<p style="color:var(--danger);padding:2rem;text-align:center;">Scanner initialization failed: ${e.message || e}</p>`;
+        } catch (e) {
+          console.log('[Scanner] Camera enumeration optional step skipped:', e);
+        }
+
+      } catch (err) {
+        console.error('[Scanner] Initial camera start failed:', err);
+        // Fallback retry with generic constraint or user camera if environment constraint fails
+        try {
+          if (!html5QrCode) html5QrCode = new Html5Qrcode("scannerReader");
+          await runQrScanner({ facingMode: "user" });
+        } catch (err2) {
+          console.error('[Scanner] Fallback camera failed:', err2);
+          reader.innerHTML = `<div style="color:var(--danger);padding:1.5rem;text-align:center;font-size:0.85rem;">
+            <strong>Unable to access camera</strong>
+            <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;line-height:1.4;">
+              Please ensure camera permissions are allowed in your browser settings.<br>
+              <em>Details: ${esc(err2.message || err.message || 'Permission denied')}</em>
+            </p>
+          </div>`;
+        }
       }
     }
 
-    function stopScanner() {
+    async function runQrScanner(cameraConfig) {
+      const reader = document.getElementById('scannerReader');
+      
+      const config = {
+        fps: 15,
+        qrbox: (width, height) => {
+          return { width: Math.min(width * 0.85, 280), height: Math.min(height * 0.5, 130) };
+        },
+        aspectRatio: 1.333334
+      };
+
+      const onSuccess = (decodedText) => {
+        console.log('[Scanner] Decoded text:', decodedText);
+        const input = document.getElementById(scannerActiveInputId);
+        if (input) {
+          input.value = decodedText.trim();
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          
+          if (scannerActiveInputId === 'heroSearchInput') {
+            document.getElementById('heroSearchBtn').click();
+          } else if (scannerActiveInputId === 'masterSearch') {
+            renderAllProductsView(true);
+          } else if (scannerActiveInputId === 'adminSearch') {
+            renderAdminTable();
+          }
+        }
+        showToast(`Code scanned: ${decodedText.trim()}`, 'success');
+        stopScanner();
+      };
+
+      const onError = (errorMessage) => {
+        // silent frame parsing callbacks
+      };
+
+      await html5QrCode.start(
+        cameraConfig,
+        config,
+        onSuccess,
+        onError
+      );
+    }
+
+    async function stopScanner() {
       if (html5QrCode) {
-        html5QrCode.stop().then(() => {
+        try {
+          if (html5QrCode.isScanning) {
+            await html5QrCode.stop();
+          }
           html5QrCode.clear();
-          html5QrCode = null;
-        }).catch(err => console.error('[Scanner] Stop failed:', err));
+        } catch (err) {
+          console.error('[Scanner] Stop failed:', err);
+        }
+        html5QrCode = null;
       }
       document.getElementById('scannerModal').classList.remove('open');
       scannerActiveInputId = null;
