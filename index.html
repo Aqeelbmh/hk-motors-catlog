@@ -137,14 +137,25 @@
       --logo-bg: #ffffff;
     }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
 
     body {
+      width: 100%;
+      max-width: 100%;
       font-family: 'Inter', 'Noto Sans Sinhala', 'Noto Sans Tamil', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       line-height: 1.5;
+      overflow-x: hidden;
+      overflow-y: visible;
+      overscroll-behavior-y: auto;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       transition: background-color 0.25s ease, color 0.25s ease;
@@ -796,10 +807,11 @@
       z-index: 300;
       opacity: 0;
       visibility: hidden;
+      pointer-events: none;
       transition: all 0.3s ease;
     }
 
-    .overlay.open { opacity: 1; visibility: visible; }
+    .overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
 
     .cart-panel {
       position: fixed;
@@ -1008,12 +1020,13 @@
       padding: 1.5rem;
       opacity: 0;
       visibility: hidden;
+      pointer-events: none;
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
     }
 
-    .modal-overlay.open { opacity: 1; visibility: visible; }
+    .modal-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
 
     .modal {
       background: var(--bg-card);
@@ -2290,9 +2303,7 @@
 
     /* ── Tablet & PWA Adjustments ── */
     body {
-      overscroll-behavior-y: contain; /* Prevents pull-to-refresh */
-      -webkit-user-select: none;
-      user-select: none; /* Prevents text selection on app shell */
+      overscroll-behavior-y: auto;
     }
 
     /* Allow selection on inputs, textareas, search and names */
