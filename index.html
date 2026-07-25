@@ -3006,25 +3006,27 @@
   <!-- Password Modal -->
   <div class="modal-overlay" id="passwordModal">
     <div class="modal">
-      <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 1.5rem; gap: 0.5rem;">
-        <div class="logo-img-container" style="width: 60px; height: 60px; padding: 4px; border-radius: 12px; margin-bottom: 0.25rem;">
-          <img src="logo-hk.png" alt="HK Motors Logo" class="logo-img">
+      <form id="adminLoginForm">
+        <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 1.5rem; gap: 0.5rem;">
+          <div class="logo-img-container" style="width: 60px; height: 60px; padding: 4px; border-radius: 12px; margin-bottom: 0.25rem;">
+            <img src="logo-hk.png" alt="HK Motors Logo" class="logo-img">
+          </div>
+          <h3 style="margin-bottom: 0; font-size: 1.25rem; font-weight: 800;">Admin Access</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">HK Motors Spare Parts Catalog</p>
         </div>
-        <h3 style="margin-bottom: 0; font-size: 1.25rem; font-weight: 800;">Admin Access</h3>
-        <p style="font-size: 0.8rem; color: var(--text-muted);">HK Motors Spare Parts Catalog</p>
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <div style="position: relative; display: flex; align-items: center;">
-          <input type="password" class="form-input" id="adminPassword" placeholder="Enter password" style="padding-right: 2.75rem; width: 100%;">
-          <button type="button" id="togglePasswordVisibility" style="position: absolute; right: 0.5rem; background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 0.25rem; color: var(--text-muted);" title="Toggle password visibility">👁️</button>
+        <div class="form-group">
+          <label>Password</label>
+          <div style="position: relative; display: flex; align-items: center;">
+            <input type="password" class="form-input" id="adminPassword" placeholder="Enter password" style="padding-right: 2.75rem; width: 100%;" autocomplete="current-password">
+            <button type="button" id="togglePasswordVisibility" style="position: absolute; right: 0.5rem; background: transparent; border: none; cursor: pointer; font-size: 1.1rem; padding: 0.25rem; color: var(--text-muted);" title="Toggle password visibility">👁️</button>
+          </div>
         </div>
-      </div>
-      <p id="passwordError" style="color:var(--danger);font-size:0.8rem;display:none;margin-top:0.5rem">Incorrect password</p>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" id="passwordCancel">Cancel</button>
-        <button class="btn btn-accent" id="passwordSubmit">Login</button>
-      </div>
+        <p id="passwordError" style="color:var(--danger);font-size:0.8rem;display:none;margin-top:0.5rem">Incorrect password</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="passwordCancel">Cancel</button>
+          <button type="submit" class="btn btn-accent" id="passwordSubmit">Login</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -4188,7 +4190,7 @@
     const MASTER_PAGE_SIZE = 24;
     let currentMasterProducts = [];
     let allMasterFiltered = [];
-    let isAdmin = false;
+    let isAdmin = sessionStorage.getItem('hkmotors_admin_auth') === 'true';
 
     // Helper: Map DB categories into standard groups
     function getStandardCategory(dbCat) {
@@ -6328,7 +6330,7 @@
         document.getElementById('orderHistorySection').style.display = 'none';
       });
 
-      // Admin Login Modal Actions
+      // Admin Login Modal Actions & Navigation Handlers
       document.getElementById('passwordCancel').addEventListener('click', () => {
         document.getElementById('passwordModal').classList.remove('open');
         window.location.hash = '#/home';
@@ -6346,33 +6348,47 @@
         }
       });
 
-      document.getElementById('passwordSubmit').addEventListener('click', () => {
+      const processAdminLogin = (e) => {
+        if (e) e.preventDefault();
         const pw = (document.getElementById('adminPassword').value || '').trim();
         if (pw === ADMIN_PASSWORD) {
           isAdmin = true;
+          sessionStorage.setItem('hkmotors_admin_auth', 'true');
           document.getElementById('passwordModal').classList.remove('open');
-          if (window.location.hash === '#/admin') {
-            handleRoute();
-          } else {
+          showView('admin');
+          if (window.location.hash !== '#/admin') {
             window.location.hash = '#/admin';
           }
         } else {
           document.getElementById('passwordError').style.display = 'block';
         }
-      });
+      };
 
-      document.getElementById('adminPassword').addEventListener('keydown', e => {
-        if (e.key === 'Enter') document.getElementById('passwordSubmit').click();
-      });
+      const adminLoginForm = document.getElementById('adminLoginForm');
+      if (adminLoginForm) {
+        adminLoginForm.addEventListener('submit', processAdminLogin);
+      }
+      document.getElementById('passwordSubmit').addEventListener('click', processAdminLogin);
 
       document.getElementById('adminLogout').addEventListener('click', () => {
         isAdmin = false;
+        sessionStorage.removeItem('hkmotors_admin_auth');
         window.location.hash = '#/home';
       });
 
-      document.getElementById('adminLinkBtn').addEventListener('click', () => {
-        window.location.hash = '#/admin';
-      });
+      const triggerAdminRoute = (e) => {
+        if (e) e.preventDefault();
+        if (window.location.hash === '#/admin') {
+          handleRoute();
+        } else {
+          window.location.hash = '#/admin';
+        }
+      };
+
+      document.getElementById('adminLinkBtn').addEventListener('click', triggerAdminRoute);
+      const navAdminLink = document.getElementById('navAdminLink');
+      if (navAdminLink) navAdminLink.addEventListener('click', triggerAdminRoute);
+      document.querySelectorAll('a[href="#/admin"]').forEach(el => el.addEventListener('click', triggerAdminRoute));
 
       // Admin Table Controls
       document.getElementById('adminSearch').addEventListener('input', renderAdminTable);
