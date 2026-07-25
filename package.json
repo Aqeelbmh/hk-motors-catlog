@@ -4,6 +4,8 @@
   "description": "HK Motors Spare Parts Catalog tablet app",
   "main": "index.html",
   "scripts": {
+    "dev": "npx -y serve -l 3000 .",
+    "start": "npx -y serve -l 3000 .",
     "build": "node generate-config.js && mkdir -p www && cp index.html products.json logo-hk.png \"logo hk.png\" manifest.json service-worker.js supabase-config.js www/ && cp -R icons www/",
     "cap:sync": "npm run build && cap sync",
     "cap:open": "cap open android"
