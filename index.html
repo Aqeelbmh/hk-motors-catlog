@@ -144,8 +144,8 @@
     html {
       width: 100%;
       max-width: 100%;
-      /* Avoid overflow-x:hidden on html — it breaks position:fixed/sticky on mobile browsers */
-      overflow-x: clip;
+      /* Do NOT clip overflow on html — it breaks position:fixed bottom nav on iOS/Android */
+      overflow-x: visible;
       overflow-y: auto;
       scroll-behavior: smooth;
       -webkit-text-size-adjust: 100%;
@@ -161,7 +161,7 @@
       min-height: 100dvh;
       min-height: 100vh;
       line-height: 1.5;
-      overflow-x: clip;
+      overflow-x: visible;
       overflow-y: visible;
       overscroll-behavior-y: auto;
       -webkit-font-smoothing: antialiased;
@@ -1503,9 +1503,9 @@
       border-radius: 2px;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 900px) {
       .nav-links {
-        display: none; /* Hide standard links on mobile — bottom bar is used instead */
+        display: none !important; /* Bottom bar handles navigation on phones/tablets */
       }
       .header-right {
         margin-left: auto;
@@ -2885,19 +2885,24 @@
       bottom: 0;
       left: 0;
       right: 0;
-      z-index: 450;
+      width: 100%;
+      max-width: 100vw;
+      box-sizing: border-box;
+      z-index: 9990;
       background: var(--mobile-nav-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       border-top: 1px solid var(--border);
-      padding: 0.4rem 0.35rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
+      padding: 0.45rem 0.4rem calc(0.55rem + env(safe-area-inset-bottom, 0px));
       justify-content: space-around;
       align-items: stretch;
-      gap: 0.2rem;
-      box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.18);
-      /* Keep nav above iOS Safari chrome / keyboard layout quirks */
-      transform: translateZ(0);
-      -webkit-transform: translateZ(0);
+      gap: 0.25rem;
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.22);
+      margin: 0;
+      /* Avoid transform — it can break fixed positioning inside clipped ancestors on mobile */
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .mobile-nav a {
@@ -2910,18 +2915,18 @@
       text-align: center;
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.68rem;
-      font-weight: 600;
-      padding: 0.45rem 0.2rem;
-      border-radius: 10px;
-      transition: all 0.2s;
-      min-height: 52px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.5rem 0.25rem;
+      border-radius: 12px;
+      transition: color 0.2s, background 0.2s;
+      min-height: 54px;
       -webkit-user-select: none;
       user-select: none;
     }
 
     .mobile-nav a .nav-ico {
-      font-size: 1.05rem;
+      font-size: 1.15rem;
       line-height: 1;
       pointer-events: none;
     }
@@ -2931,11 +2936,56 @@
       background: var(--accent-dim);
     }
 
-    @media (max-width: 768px) {
-      .mobile-nav { display: flex !important; }
-      body { padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)); }
-      .fab-cart { bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)); }
-      .toast { bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)); }
+    /* Phones, small tablets, OR any touch device (covers "Desktop site" mode) */
+    @media (max-width: 900px), (hover: none) and (pointer: coarse) {
+      .mobile-nav {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 9990 !important;
+      }
+      .nav-links {
+        display: none !important;
+      }
+      body {
+        padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      .fab-cart {
+        bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      .toast {
+        bottom: calc(6rem + env(safe-area-inset-bottom, 0px)) !important;
+      }
+      .footer {
+        padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+      }
+    }
+
+    /* Class toggle from JS — belt-and-suspenders for stubborn WebViews */
+    html.is-mobile-nav .mobile-nav {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 9990 !important;
+    }
+    html.is-mobile-nav .nav-links {
+      display: none !important;
+    }
+    html.is-mobile-nav body {
+      padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    html.is-mobile-nav .fab-cart {
+      bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)) !important;
     }
 
 
@@ -3242,7 +3292,7 @@
     html, body {
       width: 100%;
       max-width: 100%;
-      overflow-x: clip;
+      overflow-x: visible;
     }
 
     /* Core Container Alignment */
@@ -3692,6 +3742,12 @@
       </div>
     </div>
   </header>
+
+  <nav class="mobile-nav" id="mobileNav" aria-label="Mobile navigation">
+    <a href="#/home" class="mobile-nav-link" data-hash="#/home"><span class="nav-ico" aria-hidden="true">🏠</span>Home</a>
+    <a href="#/categories" class="mobile-nav-link" data-hash="#/categories"><span class="nav-ico" aria-hidden="true">📂</span>Categories</a>
+    <a href="#/products" class="mobile-nav-link" data-hash="#/products"><span class="nav-ico" aria-hidden="true">🔧</span>Products</a>
+  </nav>
 
   <!-- HOME PAGE VIEW -->
   <div id="homeView" class="view active">
@@ -4221,12 +4277,6 @@
     <p data-i18n="footerText">© HK Motors — Quality Auto Spare Parts</p>
     <button type="button" class="admin-link" id="adminLinkBtn" aria-label="Admin panel">Admin</button>
   </footer>
-
-  <nav class="mobile-nav" aria-label="Mobile navigation">
-    <a href="#/home" class="mobile-nav-link" data-hash="#/home"><span class="nav-ico" aria-hidden="true">🏠</span>Home</a>
-    <a href="#/categories" class="mobile-nav-link" data-hash="#/categories"><span class="nav-ico" aria-hidden="true">📂</span>Categories</a>
-    <a href="#/products" class="mobile-nav-link" data-hash="#/products"><span class="nav-ico" aria-hidden="true">🔧</span>Products</a>
-  </nav>
 
   <div class="toast" id="toast"></div>
   
@@ -7455,7 +7505,23 @@
     }
 
     // ── Critical UI bindings (must run before slow network sync) ──
+    function syncMobileNavMode() {
+      // Force bottom nav on narrow screens OR touch phones (even with "Desktop site" viewport)
+      let touch = false;
+      try {
+        touch = window.matchMedia('(hover: none)').matches || window.matchMedia('(pointer: coarse)').matches;
+      } catch (e) { /* ignore */ }
+      const narrow = window.innerWidth <= 900;
+      document.documentElement.classList.toggle('is-mobile-nav', touch || narrow);
+    }
+
     function bindCriticalNavigation() {
+      syncMobileNavMode();
+      if (!window.__hkmotorsMobileNavBound) {
+        window.__hkmotorsMobileNavBound = true;
+        window.addEventListener('resize', syncMobileNavMode);
+        window.addEventListener('orientationchange', () => setTimeout(syncMobileNavMode, 50));
+      }
       const processAdminLogin = (e) => {
         if (e) {
           e.preventDefault();
