@@ -1,4 +1,4 @@
-const CACHE_NAME = 'HKMOTORS-V14';
+const CACHE_NAME = 'HKMOTORS-V15';
 
 const PRECACHE_ASSETS = [
   './',

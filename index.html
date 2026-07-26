@@ -3762,6 +3762,15 @@
       return parseFloat(p.quantity) || 0;
     }
 
+    function isInStock(p) {
+      return getEffectiveStock(p) > 0;
+    }
+
+    /** Customer-facing catalog only — out-of-stock items stay in admin portal */
+    function getCustomerCatalogProducts() {
+      return products.filter(isInStock);
+    }
+
     function validateAndRepairProducts(array) {
       if (!Array.isArray(array)) return [];
       return array.map((p, idx) => {
@@ -4650,22 +4659,15 @@
     function renderProductCard(p) {
       const id = p.productId;
       const qty = cardQty[id] || 1;
-      const stock = getEffectiveStock(p);
-      const oos = stock <= 0;
       const firstCloudImg = p.image_urls && p.image_urls.length > 0 ? p.image_urls[0] : null;
       const firstLocalImg = getFirstImage(id);
       const imgSrc = firstLocalImg || firstCloudImg;
       const hasImg = !!imgSrc;
       const partNumVal = p.barcode || p.productId || 'N/A';
       const compatibilityVal = p.fit || 'General Compatibility';
-      const low = isLowStock(p);
-      const stockBadge = oos
-        ? `<span class="stock-badge oos">${t('outOfStock')}</span>`
-        : (low ? `<span class="stock-badge low">Low Stock</span>` : '');
       return `
-        <div class="product-card${oos ? ' out-of-stock' : ''}" data-id="${esc(id)}">
+        <div class="product-card" data-id="${esc(id)}">
           <div class="product-image-wrap" data-img-id="${esc(id)}" data-loaded="${hasImg ? '1' : '0'}" onclick="window.location.hash='#/product/${esc(id)}'" style="cursor:pointer">
-            ${stockBadge}
             ${hasImg
               ? `<img src="${imgSrc}" alt="${esc(p.productName)}" loading="lazy">`
               : imagePlaceholderHtml()}
@@ -4679,12 +4681,12 @@
           <div class="product-meta-line">Fits: <span class="meta-val" style="font-family:inherit;">${esc(compatibilityVal)}</span></div>
           <div class="qty-row">
             <div class="qty-control">
-              <button class="qty-btn card-qty-minus" data-id="${esc(id)}" ${oos ? 'disabled' : ''}>−</button>
-              <input type="number" class="qty-val card-qty-input" data-id="${esc(id)}" value="${qty}" min="1" ${oos ? 'disabled' : ''}>
-              <button class="qty-btn card-qty-plus" data-id="${esc(id)}" ${oos ? 'disabled' : ''}>+</button>
+              <button class="qty-btn card-qty-minus" data-id="${esc(id)}">−</button>
+              <input type="number" class="qty-val card-qty-input" data-id="${esc(id)}" value="${qty}" min="1">
+              <button class="qty-btn card-qty-plus" data-id="${esc(id)}">+</button>
             </div>
-            <button class="btn btn-accent add-cart-btn" data-id="${esc(id)}" ${oos ? 'disabled' : ''}>
-              ${oos ? t('outOfStock') : t('addToCart')}
+            <button class="btn btn-accent add-cart-btn" data-id="${esc(id)}">
+              ${t('addToCart')}
             </button>
           </div>
           <button class="btn btn-ghost btn-sm product-details-btn" onclick="window.location.hash='#/product/${esc(id)}'" style="width:100%;margin-top:0.35rem;font-weight:600;">View Details</button>
@@ -4693,12 +4695,13 @@
 
     // ── Page Renderers ──
     function renderHomeView() {
+      const catalog = getCustomerCatalogProducts();
       // 1. Featured Categories
       const catsGrid = document.getElementById('featuredCategoriesGrid');
       const cats = Object.keys(CATEGORIES_METADATA);
       catsGrid.innerHTML = cats.slice(0, 4).map(c => {
         const meta = CATEGORIES_METADATA[c];
-        const count = products.filter(p => getStandardCategory(p.category) === c).length;
+        const count = catalog.filter(p => getStandardCategory(p.category) === c).length;
         return `
           <div class="category-card" onclick="window.location.hash='#/category/${encodeURIComponent(c)}'">
             <div class="category-icon-wrap">${meta.icon}</div>
@@ -4710,14 +4713,14 @@
 
       // 2. Featured Products
       const featuredGrid = document.getElementById('featuredProductsGrid');
-      const featuredList = products.filter(p => getEffectiveStock(p) > 0).slice(0, 8);
+      const featuredList = catalog.slice(0, 8);
       featuredGrid.innerHTML = featuredList.map(renderProductCard).join('');
       loadCardImages(featuredList);
 
       // 3. Featured Brands
       const brandsGrid = document.getElementById('featuredBrandsGrid');
       const brandCounts = {};
-      products.forEach(p => {
+      catalog.forEach(p => {
         if (p.brand) {
           const b = p.brand.trim();
           brandCounts[b] = (brandCounts[b] || 0) + 1;
@@ -4734,11 +4737,12 @@
     }
 
     function renderCategoriesView() {
+      const catalog = getCustomerCatalogProducts();
       const cardGrid = document.getElementById('categoriesCardGrid');
       const cats = Object.keys(CATEGORIES_METADATA);
       cardGrid.innerHTML = cats.map(c => {
         const meta = CATEGORIES_METADATA[c];
-        const count = products.filter(p => getStandardCategory(p.category) === c).length;
+        const count = catalog.filter(p => getStandardCategory(p.category) === c).length;
         return `
           <div class="category-card" onclick="window.location.hash='#/category/${encodeURIComponent(c)}'">
             <div class="category-icon-wrap">${meta.icon}</div>
@@ -4757,7 +4761,7 @@
       document.getElementById('categoryDetailTitle').textContent = catName;
       document.getElementById('categoryDetailDesc').textContent = meta.desc;
 
-      currentCategoryProducts = products.filter(p => getStandardCategory(p.category) === catName);
+      currentCategoryProducts = getCustomerCatalogProducts().filter(p => getStandardCategory(p.category) === catName);
       currentCategoryPage = 1;
       
       const grid = document.getElementById('categoryProductGrid');
@@ -4832,6 +4836,7 @@
       }
 
       // Populate filters dynamically if they have no options loaded
+      const catalog = getCustomerCatalogProducts();
       const catSelect = document.getElementById('masterCategoryFilter');
       if (catSelect.options.length <= 1) {
         const cats = Object.keys(CATEGORIES_METADATA);
@@ -4842,7 +4847,7 @@
       const brandSelect = document.getElementById('masterBrandFilter');
       if (brandSelect.options.length <= 1) {
         const brands = new Set();
-        products.forEach(p => { if (p.brand) brands.add(p.brand.trim()); });
+        catalog.forEach(p => { if (p.brand) brands.add(p.brand.trim()); });
         const sortedBrands = [...brands].sort();
         brandSelect.innerHTML = '<option value="">All Brands</option>' + 
           sortedBrands.map(b => `<option value="${esc(b)}">${esc(b)}</option>`).join('');
@@ -4851,14 +4856,14 @@
       const vehicleSelect = document.getElementById('masterVehicleFilter');
       if (vehicleSelect.options.length <= 1) {
         const vehicles = new Set();
-        products.forEach(p => { if (p.fit) vehicles.add(p.fit.trim()); });
+        catalog.forEach(p => { if (p.fit) vehicles.add(p.fit.trim()); });
         const sortedVehicles = [...vehicles].sort();
         vehicleSelect.innerHTML = '<option value="">All Vehicles</option>' + 
           sortedVehicles.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
       }
 
-      // Perform filtering using subsequential fuzzy search matcher
-      allMasterFiltered = products.filter(p => {
+      // Customer catalog: only in-stock products (OOS visible in admin only)
+      allMasterFiltered = catalog.filter(p => {
         const stdCat = getStandardCategory(p.category);
         const partNo = String(p.barcode || p.productId);
         
@@ -4935,15 +4940,23 @@
 
     function renderProductDetailsView(productId) {
       const p = products.find(x => x.productId === String(productId));
-      if (!p) {
-        document.getElementById('detailsName').textContent = 'Product not found';
-        document.getElementById('detailsBrandBadge').textContent = '—';
-        document.getElementById('detailsPartVal').textContent = '—';
-        document.getElementById('detailsPrice').textContent = '—';
-        document.getElementById('detailsCompatibilityText').textContent = 'This product could not be found in the catalog.';
-        document.getElementById('detailsMainImgWrap').innerHTML = imagePlaceholderHtml();
-        document.getElementById('detailsSpecsGrid').innerHTML = '';
-        return;
+      if (!p || !isInStock(p)) {
+        // Out-of-stock / missing products are admin-only — keep them off the public catalog
+        if (p && !isInStock(p) && !isAdmin) {
+          showToast('This product is currently unavailable.', 'warning');
+          window.location.hash = '#/products';
+          return;
+        }
+        if (!p) {
+          document.getElementById('detailsName').textContent = 'Product not found';
+          document.getElementById('detailsBrandBadge').textContent = '—';
+          document.getElementById('detailsPartVal').textContent = '—';
+          document.getElementById('detailsPrice').textContent = '—';
+          document.getElementById('detailsCompatibilityText').textContent = 'This product could not be found in the catalog.';
+          document.getElementById('detailsMainImgWrap').innerHTML = imagePlaceholderHtml();
+          document.getElementById('detailsSpecsGrid').innerHTML = '';
+          return;
+        }
       }
 
       const id = p.productId;
@@ -5003,10 +5016,10 @@
         gallery.innerHTML = imagePlaceholderHtml();
       }
 
-      let stockStatus = 'Out of Stock';
-      if (getEffectiveStock(p) > 0) {
-        stockStatus = isLowStock(p) ? 'Low Stock ⚠️' : 'In Stock';
-      }
+      // Customer catalog never shows OOS items — always present as available
+      const stockStatus = isAdmin
+        ? (getEffectiveStock(p) > 0 ? (isLowStock(p) ? 'Low Stock ⚠️' : 'In Stock') : 'Out of Stock')
+        : 'Available';
 
       // Specs
       const specsGrid = document.getElementById('detailsSpecsGrid');
@@ -5018,7 +5031,7 @@
         { label: 'Barcode', value: p.barcode || 'N/A' },
         { label: 'Sleeve', value: p.sleeve || 'N/A' },
         { label: 'Size', value: p.size || 'Standard' },
-        { label: 'Stock Status', value: stockStatus }
+        { label: 'Availability', value: stockStatus }
       ];
       specsGrid.innerHTML = specs.map(s => `
         <div class="spec-item">
