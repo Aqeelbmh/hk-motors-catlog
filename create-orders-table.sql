@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS orders (
   notes TEXT,
   items JSONB NOT NULL DEFAULT '[]'::jsonb,
   item_count INTEGER DEFAULT 0,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'cancelled')),
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'completed', 'cancelled')),
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
