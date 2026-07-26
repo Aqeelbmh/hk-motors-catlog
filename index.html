@@ -1105,7 +1105,7 @@
       position: fixed;
       inset: 0;
       background: var(--modal-overlay);
-      z-index: 500;
+      z-index: 1200;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1113,12 +1113,16 @@
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.25s ease, visibility 0.25s ease;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
     }
 
-    .modal-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
+    .modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
 
     .modal {
       background: var(--bg-card);
@@ -1128,8 +1132,10 @@
       max-width: 460px;
       padding: 2rem;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-      transform: translateY(20px);
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateY(12px);
+      transition: transform 0.25s ease;
+      position: relative;
+      z-index: 1201;
     }
 
     .modal-overlay.open .modal {
@@ -3522,6 +3528,7 @@
         <div class="stat-info">
           <span class="stat-label">Without Images</span>
           <span class="stat-val" id="statNoImages">0</span>
+        </div>
       </div>
     </div>
 
@@ -5336,7 +5343,10 @@
         if (isAdmin) {
           showView('admin');
         } else {
-          // Trigger password prompt — do not wipe the field if the user is already typing
+          // Keep catalog underneath so laptop users still see a page while login opens
+          if (!document.querySelector('.view.active')) {
+            showView('home');
+          }
           const modal = document.getElementById('passwordModal');
           const alreadyOpen = modal.classList.contains('open');
           modal.classList.add('open');
@@ -5347,8 +5357,10 @@
             const toggleBtn = document.getElementById('togglePasswordVisibility');
             if (toggleBtn) toggleBtn.textContent = '👁️';
             document.getElementById('passwordError').style.display = 'none';
-            setTimeout(() => pwInput.focus(), 100);
           }
+          setTimeout(() => {
+            try { pwInput.focus(); } catch (e) {}
+          }, 50);
         }
       } else {
         window.location.hash = '#/home';
@@ -6046,9 +6058,17 @@
 
     // ── Admin Panel ──
     function renderAdminTable() {
-      const search = document.getElementById('adminSearch').value.toLowerCase().trim();
-      const category = document.getElementById('adminCategoryFilter').value;
-      const noImageOnly = document.getElementById('noImageFilter').checked;
+      try {
+      const searchEl = document.getElementById('adminSearch');
+      const categoryEl = document.getElementById('adminCategoryFilter');
+      const noImageEl = document.getElementById('noImageFilter');
+      if (!searchEl || !categoryEl || !noImageEl) {
+        console.warn('[Admin] Panel controls not ready yet');
+        return;
+      }
+      const search = searchEl.value.toLowerCase().trim();
+      const category = categoryEl.value;
+      const noImageOnly = noImageEl.checked;
 
       populateCategoryFilter('adminCategoryFilter', category);
 
@@ -6065,9 +6085,12 @@
       // Calculate and render dashboard statistics card metrics
       const lowCount = products.filter(isLowStock).length;
       const noImgCount = products.filter(p => !imageIds.has(String(p.productId))).length;
-      document.getElementById('statTotalProducts').textContent = products.length.toLocaleString();
-      document.getElementById('statLowStock').textContent = lowCount.toLocaleString();
-      document.getElementById('statNoImages').textContent = noImgCount.toLocaleString();
+      const totalEl = document.getElementById('statTotalProducts');
+      const lowEl = document.getElementById('statLowStock');
+      const noImgEl = document.getElementById('statNoImages');
+      if (totalEl) totalEl.textContent = products.length.toLocaleString();
+      if (lowEl) lowEl.textContent = lowCount.toLocaleString();
+      if (noImgEl) noImgEl.textContent = noImgCount.toLocaleString();
 
       // Highlight cards if filters are active
       const lowStockCard = document.getElementById('statCardLowStock');
@@ -6139,6 +6162,10 @@
 
       loadAdminThumbnails(filtered);
       renderAnalyticsCharts(); // Render inventory analytics distribution chart
+      } catch (err) {
+        console.error('[Admin] Failed to render admin table:', err);
+        showToast('Admin panel failed to load. Try refreshing.', 'error');
+      }
     }
 
     async function loadAdminThumbnails(items) {
@@ -6782,7 +6809,10 @@
     // ── Critical UI bindings (must run before slow network sync) ──
     function bindCriticalNavigation() {
       const processAdminLogin = (e) => {
-        if (e) e.preventDefault();
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
         const pwInput = document.getElementById('adminPassword');
         const pw = (pwInput && pwInput.value ? pwInput.value : '').trim();
         if (pw === ADMIN_PASSWORD) {
@@ -6790,12 +6820,9 @@
           sessionStorage.setItem('hkmotors_admin_auth', 'true');
           document.getElementById('passwordModal').classList.remove('open');
           document.getElementById('passwordError').style.display = 'none';
+          window.location.hash = '#/admin';
           showView('admin');
-          if (window.location.hash !== '#/admin') {
-            window.location.hash = '#/admin';
-          } else {
-            handleRoute();
-          }
+          try { renderAdminTable(); } catch (err) { console.error(err); }
           showToast('Admin access granted.', 'success');
         } else {
           document.getElementById('passwordError').style.display = 'block';
