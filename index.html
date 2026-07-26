@@ -4442,7 +4442,7 @@
 
     function productSearchBlob(p) {
       const partNo = String(p.barcode || p.productId || '');
-      const stdCat = getStandardCategory(p.category);
+      const stdCat = getStandardCategory(p.category, p.productName);
       return `${p.productName || ''} ${partNo} ${p.brand || ''} ${p.fit || ''} ${p.category || ''} ${p.description || ''} ${stdCat}`.toLowerCase();
     }
 
@@ -4546,7 +4546,7 @@
 
       const catCounts = {};
       products.forEach(p => {
-        const cat = getStandardCategory(p.category);
+        const cat = getStandardCategory(p.category, p.productName);
         catCounts[cat] = (catCounts[cat] || 0) + 1;
       });
 
@@ -5438,10 +5438,9 @@
     let allMasterFiltered = [];
     let isAdmin = sessionStorage.getItem('hkmotors_admin_auth') === 'true';
 
-    // Helper: Map DB categories into standard groups
-    function getStandardCategory(dbCat) {
-      if (!dbCat) return 'Accessories';
-      const c = dbCat.trim().toUpperCase();
+    // Helper: Map DB categories into standard groups (falls back to product name for vague buckets)
+    function getStandardCategory(dbCat, productName) {
+      const c = String(dbCat || '').trim().toUpperCase();
       if (c.includes('ELECTRICAL') || c.includes('LIGHT')) return 'Electrical Parts';
       if (c.includes('EINGINE') || c.includes('ENGINE') || c.includes('INJECTER') || c.includes('LEYPART') || c.includes('LEY PART')) return 'Engine Parts';
       if (c.includes('BRAKE') || c.includes('LINING') || c.includes('PAD')) return 'Brake Parts';
@@ -5449,6 +5448,10 @@
       if (c.includes('FILTER')) return 'Filters';
       if (c.includes('GASKET') || c.includes('SEAL') || c.includes('O-RING')) return 'Gaskets';
       if (c.includes('BEARING')) return 'Bearings';
+      // Vague source buckets (e.g. COMMON ITEMS) — classify from the part name
+      if (!c || /COMMON|MISC|GENERAL|OTHER|ACCESSOR/.test(c)) {
+        if (productName) return autoCategorize(productName);
+      }
       return 'Accessories';
     }
 
@@ -5496,7 +5499,7 @@
               : imagePlaceholderHtml()}
           </div>
           <div class="product-category">
-            <span>${esc(getStandardCategory(p.category))}</span>
+            <span>${esc(getStandardCategory(p.category, p.productName))}</span>
           </div>
           <div class="product-name">${esc(p.productName)}</div>
           <div class="product-partno">Part No: <strong>${esc(partNumVal)}</strong></div>
@@ -5536,7 +5539,7 @@
       const catsGrid = document.getElementById('featuredCategoriesGrid');
       const cats = Object.keys(CATEGORIES_METADATA);
       catsGrid.innerHTML = cats.slice(0, 4).map(c => {
-        const count = catalog.filter(p => getStandardCategory(p.category) === c).length;
+        const count = catalog.filter(p => getStandardCategory(p.category, p.productName) === c).length;
         return renderCategoryTile(c, count, CATEGORIES_METADATA[c]);
       }).join('');
 
@@ -5570,7 +5573,7 @@
       const cardGrid = document.getElementById('categoriesCardGrid');
       const cats = Object.keys(CATEGORIES_METADATA);
       cardGrid.innerHTML = cats.map(c => {
-        const count = catalog.filter(p => getStandardCategory(p.category) === c).length;
+        const count = catalog.filter(p => getStandardCategory(p.category, p.productName) === c).length;
         return renderCategoryTile(c, count, CATEGORIES_METADATA[c]);
       }).join('');
     }
@@ -5583,7 +5586,7 @@
       document.getElementById('categoryDetailTitle').textContent = catName;
       document.getElementById('categoryDetailDesc').textContent = meta.desc;
 
-      currentCategoryProducts = getCustomerCatalogProducts().filter(p => getStandardCategory(p.category) === catName);
+      currentCategoryProducts = getCustomerCatalogProducts().filter(p => getStandardCategory(p.category, p.productName) === catName);
       currentCategoryPage = 1;
       
       const grid = document.getElementById('categoryProductGrid');
@@ -5688,7 +5691,7 @@
 
       // Customer catalog: only in-stock products (OOS visible in admin only)
       allMasterFiltered = catalog.filter(p => {
-        const stdCat = getStandardCategory(p.category);
+        const stdCat = getStandardCategory(p.category, p.productName);
         const blob = productSearchBlob(p);
         const matchSearch = !searchQuery || scoreSearchMatch(p, searchQuery) > 0 || fuzzyMatch(blob, searchQuery);
 
@@ -5713,7 +5716,7 @@
         if (sortVal === 'name_asc') return (a.productName || '').localeCompare(b.productName || '');
         if (sortVal === 'name_desc') return (b.productName || '').localeCompare(a.productName || '');
         if (sortVal === 'brand_asc') return (a.brand || '').localeCompare(b.brand || '');
-        if (sortVal === 'category_asc') return (getStandardCategory(a.category)).localeCompare(getStandardCategory(b.category));
+        if (sortVal === 'category_asc') return (getStandardCategory(a.category, a.productName)).localeCompare(getStandardCategory(b.category, b.productName));
         if (sortVal === 'part_asc') return (a.barcode || a.productId || '').localeCompare(b.barcode || b.productId || '');
         if (sortVal === 'price_asc') return parseFloat(a.retailPrice || 0) - parseFloat(b.retailPrice || 0);
         if (sortVal === 'price_desc') return parseFloat(b.retailPrice || 0) - parseFloat(a.retailPrice || 0);
@@ -5861,7 +5864,7 @@
       const specsGrid = document.getElementById('detailsSpecsGrid');
       const specs = [
         { label: 'Product ID', value: p.productId },
-        { label: 'Category', value: getStandardCategory(p.category) },
+        { label: 'Category', value: getStandardCategory(p.category, p.productName) },
         { label: 'Brand', value: p.brand || 'GENUINE' },
         { label: 'Type', value: p.type || 'Standard' },
         { label: 'Barcode', value: p.barcode || 'N/A' },

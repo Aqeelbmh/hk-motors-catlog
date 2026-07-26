@@ -107,3 +107,27 @@ When deploying this web application to Vercel, set the following **Environment V
 
 The project build script will automatically write these variables into `supabase-config.js` during deployment compilation.
 
+---
+
+## 🌐 Production
+
+- **Live app**: [https://hk-motors-catlog-alpha.vercel.app](https://hk-motors-catlog-alpha.vercel.app)
+- **Admin**: open the live site, scroll to the footer **Admin** link (or go to `/#/admin`), password `hkmotors2024`
+- **Build / deploy locally**:
+  ```bash
+  npm run build
+  npx vercel --prod --yes
+  ```
+- **Quick smoke checks** (optional):
+  ```bash
+  node smoke-test.mjs
+  ```
+
+### Verified customer flows
+- Home → categories / products / product details navigation
+- Search + vehicle/brand chips + relevance sort
+- Add to order → WhatsApp checkout + confirmation
+- Out-of-stock items hidden from public catalog (visible in admin)
+- Offline PWA shell via service worker (cache `HKMOTORS-V22`)
+
+
