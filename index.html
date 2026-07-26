@@ -1533,13 +1533,13 @@
     /* ── Hero Banner ── */
     .hero-banner {
       position: relative;
-      min-height: min(78vh, 620px);
+      min-height: min(72vh, 560px);
       background: var(--hero-bg);
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: clamp(3rem, 8vw, 5.5rem) 1.25rem;
+      padding: clamp(2.5rem, 7vw, 5rem) clamp(1rem, 4vw, 1.75rem);
       overflow: hidden;
       border-bottom: 1px solid var(--border);
     }
@@ -1550,8 +1550,8 @@
       background-image:
         linear-gradient(var(--hero-grid) 1px, transparent 1px),
         linear-gradient(90deg, var(--hero-grid) 1px, transparent 1px);
-      background-size: 36px 36px;
-      opacity: 0.55;
+      background-size: 40px 40px;
+      opacity: 0.45;
       pointer-events: none;
     }
 
@@ -1560,19 +1560,20 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at 50% 20%, transparent 0%, var(--hero-vignette) 75%),
-        linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.25) 100%);
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(11, 118, 178, 0.28), transparent 55%),
+        radial-gradient(circle at 50% 100%, rgba(225, 29, 46, 0.18), transparent 45%),
+        linear-gradient(180deg, transparent 35%, rgba(0,0,0,0.35) 100%);
       pointer-events: none;
     }
 
     .hero-content {
       position: relative;
       z-index: 2;
-      width: min(100%, 760px);
+      width: min(100%, 720px);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.85rem;
+      gap: 0.75rem;
       animation: heroIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
 
@@ -1583,54 +1584,55 @@
 
     .hero-kicker {
       margin: 0;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.78);
+      color: rgba(255, 255, 255, 0.72);
     }
 
     .hero-title {
       margin: 0;
-      font-size: clamp(2.4rem, 7vw, 4.25rem);
+      font-size: clamp(2.35rem, 8vw, 4.1rem);
       font-weight: 800;
-      letter-spacing: -0.03em;
+      letter-spacing: -0.035em;
       text-transform: none;
       color: #ffffff;
       background: none;
       -webkit-text-fill-color: #ffffff;
-      line-height: 1.05;
+      line-height: 1.02;
     }
 
     .hero-tagline {
-      margin: 0 0 0.75rem;
-      font-size: clamp(1rem, 2.4vw, 1.2rem);
+      margin: 0 0 0.5rem;
+      font-size: clamp(0.95rem, 2.5vw, 1.15rem);
       color: rgba(255, 255, 255, 0.88);
       font-weight: 500;
       letter-spacing: 0.01em;
       text-transform: none;
-      max-width: 28rem;
+      max-width: 26rem;
+      line-height: 1.45;
     }
 
     .hero-search-wrap {
       width: 100%;
       max-width: 640px;
       background: var(--hero-search-bg);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 999px;
-      padding: 0.4rem 0.4rem 0.4rem 1.15rem;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 18px;
+      padding: 0.4rem 0.4rem 0.4rem 1rem;
       display: flex;
       align-items: center;
-      gap: 0.55rem;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      gap: 0.45rem;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.28);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       transition: border-color 0.25s ease, box-shadow 0.25s ease;
     }
 
     .hero-search-wrap:focus-within {
       border-color: rgba(255,255,255,0.35);
-      box-shadow: 0 0 0 4px rgba(225, 29, 46, 0.2), 0 20px 50px rgba(0,0,0,0.25);
+      box-shadow: 0 0 0 4px rgba(225, 29, 46, 0.2), 0 18px 40px rgba(0,0,0,0.28);
     }
 
     .hero-search-input {
@@ -1639,7 +1641,7 @@
       background: transparent;
       border: none;
       color: var(--text);
-      font-size: 1rem;
+      font-size: 0.98rem;
       outline: none;
       font-family: inherit;
     }
@@ -1651,28 +1653,33 @@
     }
 
     .btn-search {
-      border-radius: 999px;
-      padding: 0.7rem 1.4rem;
+      border-radius: 14px;
+      padding: 0.7rem 1.25rem;
       font-weight: 700;
-      min-height: 46px;
+      min-height: 44px;
+      flex-shrink: 0;
     }
 
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.65rem;
+      gap: 0.55rem;
       justify-content: center;
-      margin-top: 0.35rem;
+      margin-top: 0.25rem;
+      width: 100%;
+      max-width: 420px;
     }
 
     .hero-link-btn {
-      border-radius: 999px !important;
+      border-radius: 14px !important;
       border-color: rgba(255,255,255,0.28) !important;
       color: #fff !important;
       background: rgba(255,255,255,0.08) !important;
       text-decoration: none;
       min-height: 44px;
-      padding: 0.55rem 1.15rem !important;
+      padding: 0.55rem 1.1rem !important;
+      flex: 1 1 auto;
+      justify-content: center;
     }
 
     .hero-link-btn:hover {
@@ -1682,56 +1689,76 @@
 
     /* ── Home Page Sections ── */
     .home-section {
-      padding: clamp(2.75rem, 6vw, 4.5rem) 0;
+      padding: clamp(2.25rem, 5.5vw, 4rem) 0;
       border-bottom: 1px solid var(--border);
     }
 
     .home-section.alt-bg {
-      background: var(--bg-alt);
+      background:
+        linear-gradient(180deg, var(--bg-alt) 0%, var(--bg) 100%);
     }
 
     .section-container {
       max-width: var(--max);
       margin: 0 auto;
-      padding: 0 clamp(1rem, 3vw, 1.75rem);
+      padding: 0 clamp(1rem, 3.5vw, 1.75rem);
       width: 100%;
     }
 
     .section-heading {
       display: flex;
-      align-items: end;
+      align-items: flex-end;
       justify-content: space-between;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      gap: 0.85rem 1.25rem;
+      margin-bottom: clamp(1.15rem, 3vw, 1.65rem);
       flex-wrap: wrap;
     }
 
+    .section-heading-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 0;
+    }
+
+    .section-eyebrow {
+      margin: 0;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
     .section-title {
-      font-size: clamp(1.35rem, 3vw, 1.75rem);
+      font-size: clamp(1.3rem, 3.2vw, 1.7rem);
       font-weight: 800;
       color: var(--text);
       margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      letter-spacing: -0.02em;
+      display: block;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
     }
 
     .section-title::before {
-      content: '';
-      display: block;
-      width: 5px;
-      height: 1.15em;
-      background: var(--accent);
-      border-radius: 999px;
-      flex-shrink: 0;
+      display: none;
+    }
+
+    .section-subtitle {
+      margin: 0.15rem 0 0;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      max-width: 36rem;
     }
 
     .section-link {
       color: var(--logo-sky-blue);
       font-weight: 700;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       text-decoration: none;
+      white-space: nowrap;
+      padding: 0.4rem 0;
     }
 
     .section-link:hover {
@@ -1741,102 +1768,119 @@
     /* Featured Brands */
     .brands-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1.25rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.85rem;
     }
 
     .brand-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.75rem;
-      text-align: center;
+      border-radius: 16px;
+      padding: 1.25rem 1rem;
+      text-align: left;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      gap: 0.5rem;
+      gap: 0.3rem;
+      min-height: 96px;
+      width: 100%;
+      font-family: inherit;
+      color: inherit;
     }
 
     .brand-card:hover {
       border-color: var(--accent);
-      transform: translateY(-5px);
-      box-shadow: 0 8px 20px rgba(255, 51, 68, 0.1);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
     }
 
     .brand-name {
-      font-weight: 700;
-      font-size: 1.15rem;
+      font-weight: 800;
+      font-size: 0.95rem;
       color: var(--text);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
+      line-height: 1.25;
+      word-break: break-word;
     }
 
     .brand-type {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--text-muted);
     }
 
     /* Contact Block Container */
-    .contact-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3rem;
-      align-items: center;
+    .contact-section {
+      background:
+        radial-gradient(700px 280px at 0% 0%, rgba(11, 118, 178, 0.12), transparent 55%),
+        radial-gradient(500px 220px at 100% 100%, rgba(225, 29, 46, 0.08), transparent 50%),
+        var(--bg);
     }
 
-    @media (max-width: 768px) {
-      .contact-container {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-      }
+    .contact-container {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: clamp(1.5rem, 4vw, 3rem);
+      align-items: stretch;
     }
 
     .contact-info h3 {
-      font-size: 2rem;
+      font-size: clamp(1.6rem, 3.5vw, 2rem);
       font-weight: 800;
-      margin-bottom: 0.5rem;
+      margin: 0 0 0.4rem;
+      letter-spacing: -0.03em;
     }
 
     .contact-tagline {
       color: var(--accent);
       font-weight: 600;
-      margin-bottom: 2rem;
+      margin: 0 0 1.5rem;
+      font-size: 0.95rem;
+      line-height: 1.4;
     }
 
     .contact-details {
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
+      gap: 0.85rem;
     }
 
     .contact-item {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      font-size: 1.05rem;
+      gap: 0.85rem;
+      font-size: 0.98rem;
       color: var(--text);
+      padding: 0.75rem 0.9rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
     }
 
     .contact-item svg {
       color: var(--accent);
+      flex-shrink: 0;
     }
 
     .contact-action {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 2.25rem;
+      border-radius: 18px;
+      padding: clamp(1.35rem, 3vw, 2rem);
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
+      justify-content: center;
+      gap: 1.1rem;
     }
 
     .contact-action p {
       color: var(--text-muted);
-      line-height: 1.6;
+      line-height: 1.55;
+      margin: 0;
+      font-size: 0.95rem;
     }
 
     .btn-contact-wa {
@@ -1848,148 +1892,307 @@
       gap: 0.75rem;
       font-weight: 700;
       padding: 0.95rem;
+      border-radius: 14px;
     }
 
-    /* ── Category Cards Grid View ── */
+    /* ── Category page + tiles ── */
+    .categories-page {
+      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
     .view-header-bar {
-      padding: clamp(1.75rem, 4vw, 3rem) 1.25rem;
+      padding: clamp(1.5rem, 4vw, 2.75rem) 1.25rem 1.35rem;
       background: linear-gradient(180deg, var(--bg-alt) 0%, transparent 100%);
-      border-bottom: 1px solid var(--border);
-      text-align: center;
+      border-bottom: none;
+      text-align: left;
+    }
+
+    .view-header-bar .section-container {
+      text-align: left;
     }
 
     .view-header-bar h2 {
-      font-size: clamp(1.55rem, 3.5vw, 2.15rem);
-      font-weight: 850;
-      margin-bottom: 0.4rem;
-      letter-spacing: -0.02em;
+      font-size: clamp(1.55rem, 4vw, 2.1rem);
+      font-weight: 800;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.03em;
     }
 
     .view-header-bar p {
       color: var(--text-muted);
-      font-size: clamp(0.9rem, 2vw, 1.05rem);
-      max-width: 560px;
-      margin: 0 auto;
+      font-size: clamp(0.9rem, 2vw, 1.02rem);
+      max-width: 34rem;
+      margin: 0;
+      line-height: 1.45;
     }
 
     .categories-card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
-      gap: 1.25rem;
-      padding-top: 0;
-      padding-bottom: 0.5rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.85rem;
+      padding: 0.25rem 0 0.5rem;
+      width: 100%;
     }
 
-    .category-card {
+    #featuredCategoriesGrid.categories-card-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .category-card,
+    .category-tile {
       position: relative;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.75rem 1.35rem;
+      border-radius: 16px;
+      padding: 1.1rem 1rem;
       cursor: pointer;
       overflow: hidden;
       transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0.85rem;
+      align-items: center;
+      box-shadow: none;
+      text-align: left;
+      min-height: 0;
     }
 
-    .category-card::before {
+    .category-card::before,
+    .category-tile::before {
       content: '';
       position: absolute;
-      top: 0;
       left: 0;
-      width: 100%;
-      height: 4px;
-      background: var(--border);
-      transition: background 0.3s ease;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: transparent;
+      transition: background 0.25s ease;
     }
 
-    .category-card:hover {
-      transform: translateY(-8px);
+    .category-card:hover,
+    .category-tile:hover,
+    .category-card:focus-visible,
+    .category-tile:focus-visible {
+      transform: translateY(-2px);
       border-color: var(--accent);
-      box-shadow: 0 10px 30px rgba(255, 51, 68, 0.08);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+      outline: none;
     }
 
-    .category-card:hover::before {
+    .category-card:hover::before,
+    .category-tile:hover::before,
+    .category-card:focus-visible::before,
+    .category-tile:focus-visible::before {
       background: var(--accent);
     }
 
-    .category-icon-wrap {
-      width: 50px;
-      height: 50px;
+    .category-icon-wrap,
+    .category-tile-icon {
+      width: 48px;
+      height: 48px;
       background: var(--bg-elevated);
-      border-radius: 12px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--accent);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      font-size: 1.25rem;
+      flex-shrink: 0;
+      box-shadow: none;
     }
 
-    .category-card-title {
-      font-size: 1.25rem;
+    .category-tile-body {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .category-card-title,
+    .category-tile-title {
+      font-size: 0.98rem;
       font-weight: 800;
       color: var(--text);
+      margin: 0;
+      line-height: 1.25;
+      letter-spacing: -0.015em;
     }
 
-    .category-card-count {
-      font-size: 0.85rem;
+    .category-tile-desc {
+      margin: 0;
+      font-size: 0.78rem;
       color: var(--text-muted);
-      margin-top: auto;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .category-card-count,
+    .category-tile-count {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--logo-sky-blue);
+      margin-top: 0.15rem;
+    }
+
+    .category-tile-arrow {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      font-weight: 700;
+      opacity: 0.55;
+      transition: transform 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+    }
+
+    .category-tile:hover .category-tile-arrow,
+    .category-card:hover .category-tile-arrow {
+      color: var(--accent);
+      opacity: 1;
+      transform: translateX(3px);
     }
 
     /* ── Dedicated Category Page View ── */
     .category-hero {
       position: relative;
-      height: 280px;
+      min-height: clamp(180px, 32vw, 260px);
+      height: auto;
       background: linear-gradient(135deg, var(--bg-alt) 0%, var(--bg) 100%);
       display: flex;
       align-items: flex-end;
-      padding: 3rem 1.5rem;
+      padding: clamp(1.5rem, 4vw, 2.75rem) clamp(1rem, 3vw, 1.5rem);
       border-bottom: 1px solid var(--border);
       overflow: hidden;
     }
 
     .category-hero-overlay {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: linear-gradient(rgba(255, 51, 68, 0.05) 1px, transparent 1px);
-      background-size: 20px 20px;
-      opacity: 0.5;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 51, 68, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 51, 68, 0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: 0.6;
     }
 
     .category-hero-content {
       position: relative;
       z-index: 2;
-      max-width: 1200px;
+      max-width: var(--max);
       margin: 0 auto;
       width: 100%;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      gap: 0.75rem;
+      gap: 0.55rem;
     }
 
     .back-link-btn {
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.15rem;
     }
 
     #categoryDetailTitle {
-      font-size: 2.5rem;
-      font-weight: 850;
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
+      font-size: clamp(1.55rem, 5vw, 2.35rem);
+      font-weight: 800;
+      text-transform: none;
+      letter-spacing: -0.03em;
+      margin: 0;
+      line-height: 1.15;
     }
 
     #categoryDetailDesc {
-      font-size: 1.1rem;
+      font-size: clamp(0.9rem, 2.2vw, 1.05rem);
       color: var(--text-muted);
-      max-width: 700px;
+      max-width: 40rem;
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    /* Home / categories responsive breakpoints */
+    @media (min-width: 640px) {
+      .categories-card-grid,
+      #featuredCategoriesGrid.categories-card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+      .brands-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 900px) {
+      .categories-card-grid,
+      #featuredCategoriesGrid.categories-card-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.1rem;
+      }
+      .brands-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+      .category-card,
+      .category-tile {
+        grid-template-columns: 1fr;
+        align-items: start;
+        padding: 1.25rem;
+        gap: 0.85rem;
+        min-height: 168px;
+      }
+      .category-tile-arrow {
+        position: absolute;
+        top: 1.15rem;
+        right: 1.1rem;
+      }
+      .category-card::before,
+      .category-tile::before {
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: auto;
+        width: 100%;
+        height: 3px;
+      }
+    }
+
+    @media (min-width: 1100px) {
+      .categories-card-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      #featuredCategoriesGrid.categories-card-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .contact-container {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+      }
+      .hero-banner {
+        min-height: auto;
+        padding-top: 2.25rem;
+        padding-bottom: 2.5rem;
+      }
+      .brands-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .categories-card-grid,
+      #featuredCategoriesGrid.categories-card-grid {
+        grid-template-columns: 1fr;
+        gap: 0.7rem;
+      }
+      .category-tile-desc {
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+      }
+      .brand-card {
+        min-height: 84px;
+        padding: 1rem 0.85rem;
+      }
     }
 
     .catalog-container-padding {
@@ -3060,8 +3263,8 @@
         gap: 1.35rem !important;
       }
       .categories-card-grid {
-        grid-template-columns: repeat(4, 1fr) !important;
-        gap: 1.5rem !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1.25rem;
       }
       .admin-stats-grid {
         grid-template-columns: repeat(4, 1fr) !important;
@@ -3082,8 +3285,8 @@
         gap: 1.15rem !important;
       }
       .categories-card-grid {
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 1.25rem !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.1rem;
       }
       .admin-stats-grid {
         grid-template-columns: repeat(3, 1fr) !important;
@@ -3107,8 +3310,8 @@
         gap: 1rem !important;
       }
       .categories-card-grid {
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 1rem !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
       }
       .admin-stats-grid {
         grid-template-columns: repeat(2, 1fr) !important;
@@ -3145,20 +3348,21 @@
         gap: 1.5rem !important;
       }
       .categories-card-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
-        gap: 0.85rem !important;
-        padding-top: 1.5rem !important;
-        padding-bottom: 2.5rem !important;
+        grid-template-columns: 1fr;
+        gap: 0.7rem;
+        padding-top: 0.25rem;
+        padding-bottom: 0.5rem;
       }
+      .category-tile,
       .category-card {
-        padding: 1.25rem 1rem !important;
+        padding: 1rem 0.9rem;
       }
       .brands-grid {
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
-        gap: 0.75rem !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.7rem;
       }
       .brand-card {
-        padding: 1.25rem 0.85rem !important;
+        padding: 1rem 0.85rem;
       }
       .admin-stats-grid {
         padding: 1rem 1rem 0.5rem 1rem !important;
@@ -3380,6 +3584,7 @@
       border: 1px solid var(--border);
       border-radius: 16px;
       box-shadow: none;
+      font-family: inherit;
     }
 
     .brand-card:hover {
@@ -3517,8 +3722,12 @@
     <section class="home-section">
       <div class="section-container">
         <div class="section-heading">
-          <h3 class="section-title">Featured Categories</h3>
-          <a class="section-link" href="#/categories">View all</a>
+          <div class="section-heading-text">
+            <p class="section-eyebrow">Shop by type</p>
+            <h3 class="section-title">Featured Categories</h3>
+            <p class="section-subtitle">Jump into the parts groups customers browse most.</p>
+          </div>
+          <a class="section-link" href="#/categories">View all →</a>
         </div>
         <div class="categories-card-grid" id="featuredCategoriesGrid"></div>
       </div>
@@ -3527,8 +3736,12 @@
     <section class="home-section alt-bg">
       <div class="section-container">
         <div class="section-heading">
-          <h3 class="section-title">Featured Products</h3>
-          <a class="section-link" href="#/products">View catalog</a>
+          <div class="section-heading-text">
+            <p class="section-eyebrow">In stock now</p>
+            <h3 class="section-title">Featured Products</h3>
+            <p class="section-subtitle">Quick picks from the live catalog — tap a card for details.</p>
+          </div>
+          <a class="section-link" href="#/products">View catalog →</a>
         </div>
         <div class="product-grid" id="featuredProductsGrid"></div>
       </div>
@@ -3537,7 +3750,11 @@
     <section class="home-section">
       <div class="section-container">
         <div class="section-heading">
-          <h3 class="section-title">Featured Brands</h3>
+          <div class="section-heading-text">
+            <p class="section-eyebrow">Trusted lines</p>
+            <h3 class="section-title">Featured Brands</h3>
+            <p class="section-subtitle">Filter the full catalog by popular brand in one tap.</p>
+          </div>
         </div>
         <div class="brands-grid" id="featuredBrandsGrid"></div>
       </div>
@@ -3578,11 +3795,12 @@
   <div id="categoriesView" class="view">
     <div class="view-header-bar">
       <div class="section-container">
+        <p class="section-eyebrow">Full range</p>
         <h2>Browse Categories</h2>
-        <p>Select a category to explore compatible spare parts</p>
+        <p>Pick a parts group to see everything available in stock for that type.</p>
       </div>
     </div>
-    <div class="section-container">
+    <div class="section-container categories-page">
       <div class="categories-card-grid" id="categoriesCardGrid"></div>
     </div>
   </div>
@@ -5296,6 +5514,21 @@
         </div>`;
     }
 
+    // Helper: shared category tile markup (home + categories)
+    function renderCategoryTile(catName, count, meta) {
+      const m = meta || CATEGORIES_METADATA[catName] || { icon: '📦', desc: '' };
+      return `
+        <article class="category-tile" role="link" tabindex="0" data-category="${esc(catName)}" title="Open ${esc(catName)}">
+          <div class="category-tile-icon" aria-hidden="true">${m.icon}</div>
+          <div class="category-tile-body">
+            <h4 class="category-tile-title">${esc(catName)}</h4>
+            <p class="category-tile-desc">${esc(m.desc || '')}</p>
+            <span class="category-tile-count">${count} part${count === 1 ? '' : 's'}</span>
+          </div>
+          <span class="category-tile-arrow" aria-hidden="true">→</span>
+        </article>`;
+    }
+
     // ── Page Renderers ──
     function renderHomeView() {
       const catalog = getCustomerCatalogProducts();
@@ -5303,15 +5536,8 @@
       const catsGrid = document.getElementById('featuredCategoriesGrid');
       const cats = Object.keys(CATEGORIES_METADATA);
       catsGrid.innerHTML = cats.slice(0, 4).map(c => {
-        const meta = CATEGORIES_METADATA[c];
         const count = catalog.filter(p => getStandardCategory(p.category) === c).length;
-        return `
-          <div class="category-card" onclick="window.location.hash='#/category/${encodeURIComponent(c)}'">
-            <div class="category-icon-wrap">${meta.icon}</div>
-            <h4 class="category-card-title">${esc(c)}</h4>
-            <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.4;margin-bottom:0.5rem;">${esc(meta.desc)}</p>
-            <div class="category-card-count">${count} items available</div>
-          </div>`;
+        return renderCategoryTile(c, count, CATEGORIES_METADATA[c]);
       }).join('');
 
       // 2. Featured Products
@@ -5332,10 +5558,10 @@
       const topBrands = Object.entries(brandCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
       brandsGrid.innerHTML = topBrands.map(([b, count]) => {
         return `
-          <div class="brand-card" onclick="window.location.hash='#/products'; setTimeout(() => { document.getElementById('masterBrandFilter').value = '${esc(b)}'; renderAllProductsView(true); }, 50);">
+          <button type="button" class="brand-card" data-brand-filter="${esc(b)}">
             <div class="brand-name">${esc(b)}</div>
             <div class="brand-type">${count} parts listed</div>
-          </div>`;
+          </button>`;
       }).join('');
     }
 
@@ -5344,15 +5570,8 @@
       const cardGrid = document.getElementById('categoriesCardGrid');
       const cats = Object.keys(CATEGORIES_METADATA);
       cardGrid.innerHTML = cats.map(c => {
-        const meta = CATEGORIES_METADATA[c];
         const count = catalog.filter(p => getStandardCategory(p.category) === c).length;
-        return `
-          <div class="category-card" onclick="window.location.hash='#/category/${encodeURIComponent(c)}'">
-            <div class="category-icon-wrap">${meta.icon}</div>
-            <h4 class="category-card-title">${esc(c)}</h4>
-            <p style="font-size:0.82rem;color:var(--text-muted);line-height:1.45;margin-bottom:0.5rem;">${esc(meta.desc)}</p>
-            <div class="category-card-count">${count} items available</div>
-          </div>`;
+        return renderCategoryTile(c, count, CATEGORIES_METADATA[c]);
       }).join('');
     }
 
@@ -7443,7 +7662,7 @@
         if (e.key === 'Enter') document.getElementById('heroSearchBtn').click();
       });
 
-      document.querySelectorAll('#heroVehicleChips .quick-chip, #catalogVehicleChips .quick-chip').forEach(btn => {
+      document.querySelectorAll('#heroVehicleChips .quick-chip, #catalogChipsScroll .quick-chip[data-vehicle]').forEach(btn => {
         btn.addEventListener('click', () => {
           const fromHero = !!btn.closest('#heroVehicleChips');
           setVehicleChip(btn.dataset.vehicle, fromHero);
@@ -7497,6 +7716,8 @@
         const minusBtn = e.target.closest('.card-qty-minus');
         const plusBtn = e.target.closest('.card-qty-plus');
         const addCartBtn = e.target.closest('.add-cart-btn');
+        const categoryTile = e.target.closest('.category-tile[data-category], .category-card[data-category]');
+        const brandCard = e.target.closest('.brand-card[data-brand-filter]');
 
         if (minusBtn) {
           const id = minusBtn.dataset.id;
@@ -7517,6 +7738,20 @@
         } else if (addCartBtn) {
           const id = addCartBtn.dataset.id;
           addToCart(id, cardQty[id] || 1);
+        } else if (categoryTile) {
+          window.location.hash = `#/category/${encodeURIComponent(categoryTile.dataset.category)}`;
+        } else if (brandCard) {
+          const brand = brandCard.dataset.brandFilter;
+          window.location.hash = '#/products';
+          setTimeout(() => {
+            const brandSelect = document.getElementById('masterBrandFilter');
+            if (brandSelect) {
+              brandSelect.value = brand;
+              activeBrandChip = brand;
+              syncQuickChipUI();
+            }
+            renderAllProductsView(true);
+          }, 50);
         } else {
           const card = e.target.closest('.product-card[data-id]');
           if (card && !e.target.closest('.qty-row, .qty-control, button, input, a')) {
@@ -7527,6 +7762,12 @@
 
       document.body.addEventListener('keydown', e => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
+        const tile = e.target.closest?.('.category-tile[data-category]');
+        if (tile) {
+          e.preventDefault();
+          window.location.hash = `#/category/${encodeURIComponent(tile.dataset.category)}`;
+          return;
+        }
         const card = e.target.closest?.('.product-card[data-id]');
         if (!card || e.target.closest('.qty-row, button, input')) return;
         e.preventDefault();
