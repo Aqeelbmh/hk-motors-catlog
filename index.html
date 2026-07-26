@@ -10,7 +10,23 @@
     })();
   </script>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <script>
+    /* Detect phones/tablets before first paint — Samsung Chrome often reports a wide “desktop” viewport */
+    (function () {
+      try {
+        var shortEdge = Math.min(screen.width || 0, screen.height || 0);
+        var touch = (navigator.maxTouchPoints || 0) > 0 || ('ontouchstart' in window);
+        var narrowCss = (window.innerWidth || 0) <= 900;
+        var phoneLike = shortEdge > 0 && shortEdge <= 920;
+        var tabletTouch = touch && shortEdge > 0 && shortEdge <= 1280;
+        if (narrowCss || phoneLike || tabletTouch) {
+          document.documentElement.classList.add('is-mobile-nav');
+        }
+      } catch (e) { /* ignore */ }
+    })();
+  </script>
   <meta name="description" content="Explore the premium spare parts catalog for HK Motors. Find high-quality, genuine auto parts, engines, filters, electricals and accessories in English, Sinhala, and Tamil.">
   <title>HK Motors — Spare Parts Catalog</title>
   <link rel="manifest" href="manifest.json">
@@ -48,6 +64,8 @@
   <!-- jsPDF Receipt Generator Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
     .scan-btn {
       color: var(--text-muted);
       transition: color 0.2s ease, transform 0.2s ease;
@@ -2886,7 +2904,7 @@
       left: 0;
       right: 0;
       width: 100%;
-      max-width: 100vw;
+      max-width: 100%;
       box-sizing: border-box;
       z-index: 9990;
       background: var(--mobile-nav-bg);
@@ -2899,14 +2917,14 @@
       gap: 0.25rem;
       box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.22);
       margin: 0;
-      /* Avoid transform — it can break fixed positioning inside clipped ancestors on mobile */
       visibility: visible;
       opacity: 1;
       pointer-events: auto;
     }
 
     .mobile-nav a {
-      flex: 1;
+      flex: 1 1 0;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -2936,8 +2954,11 @@
       background: var(--accent-dim);
     }
 
-    /* Phones, small tablets, OR any touch device (covers "Desktop site" mode) */
-    @media (max-width: 900px), (hover: none) and (pointer: coarse) {
+    /*
+      Samsung Chrome often keeps a “fine” primary pointer, so require any-pointer/any-hover too.
+      Desktop-site mode widens the CSS viewport — JS class handles that case.
+    */
+    @media (max-width: 900px), (pointer: coarse), (any-pointer: coarse), (hover: none), (any-hover: none) {
       .mobile-nav {
         display: flex !important;
         visibility: visible !important;
@@ -2947,26 +2968,17 @@
         bottom: 0 !important;
         left: 0 !important;
         right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
         z-index: 9990 !important;
       }
-      .nav-links {
-        display: none !important;
-      }
-      body {
-        padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
-      }
-      .fab-cart {
-        bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)) !important;
-      }
-      .toast {
-        bottom: calc(6rem + env(safe-area-inset-bottom, 0px)) !important;
-      }
-      .footer {
-        padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
-      }
+      .nav-links { display: none !important; }
+      body { padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important; }
+      .fab-cart { bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)) !important; }
+      .toast { bottom: calc(6rem + env(safe-area-inset-bottom, 0px)) !important; }
+      .footer { padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px)); }
     }
 
-    /* Class toggle from JS — belt-and-suspenders for stubborn WebViews */
     html.is-mobile-nav .mobile-nav {
       display: flex !important;
       visibility: visible !important;
@@ -2976,10 +2988,16 @@
       bottom: 0 !important;
       left: 0 !important;
       right: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
       z-index: 9990 !important;
     }
-    html.is-mobile-nav .nav-links {
-      display: none !important;
+    html.is-mobile-nav .nav-links { display: none !important; }
+    html.is-mobile-nav,
+    html.is-mobile-nav body {
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: hidden;
     }
     html.is-mobile-nav body {
       padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
@@ -2988,6 +3006,67 @@
       bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)) !important;
     }
 
+    /* Screen-fit for Android / Samsung */
+    html.is-mobile-nav .header,
+    html.is-mobile-nav .view,
+    html.is-mobile-nav .section-container,
+    html.is-mobile-nav .hero-banner,
+    html.is-mobile-nav .hero-content,
+    html.is-mobile-nav .hero-search-wrap,
+    html.is-mobile-nav .all-products-layout,
+    html.is-mobile-nav .catalog-toolbar,
+    html.is-mobile-nav .catalog-search-panel,
+    html.is-mobile-nav .product-grid,
+    html.is-mobile-nav .categories-card-grid,
+    html.is-mobile-nav .brands-grid,
+    html.is-mobile-nav .contact-container,
+    html.is-mobile-nav .footer {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    html.is-mobile-nav .header {
+      padding-left: max(0.75rem, env(safe-area-inset-left, 0px)) !important;
+      padding-right: max(0.75rem, env(safe-area-inset-right, 0px)) !important;
+    }
+    html.is-mobile-nav .section-container,
+    html.is-mobile-nav .view-header-bar .section-container,
+    html.is-mobile-nav .details-container-padding,
+    html.is-mobile-nav .catalog-container-padding {
+      padding-left: max(0.85rem, env(safe-area-inset-left, 0px)) !important;
+      padding-right: max(0.85rem, env(safe-area-inset-right, 0px)) !important;
+    }
+    html.is-mobile-nav .hero-banner {
+      min-height: auto !important;
+      height: auto !important;
+      padding: 2rem max(0.85rem, env(safe-area-inset-left, 0px)) 2.25rem !important;
+    }
+    html.is-mobile-nav .hero-search-wrap {
+      max-width: 100% !important;
+      border-radius: 16px !important;
+    }
+    html.is-mobile-nav .product-card,
+    html.is-mobile-nav .category-tile,
+    html.is-mobile-nav .brand-card {
+      max-width: 100%;
+      min-width: 0;
+    }
+    html.is-mobile-nav img {
+      max-width: 100%;
+      height: auto;
+    }
+    html.is-mobile-nav .product-grid,
+    html.is-mobile-nav #masterProductGrid .product-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 0.75rem !important;
+      width: 100% !important;
+    }
+    @media (max-width: 380px) {
+      html.is-mobile-nav .product-grid,
+      html.is-mobile-nav #masterProductGrid .product-grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
 
     @media (max-width: 480px) {
       .header { padding: 0 0.75rem; gap: 0.5rem; }
@@ -2996,7 +3075,7 @@
       .lang-btn { padding: 0.4rem 0.5rem; font-size: 0.68rem; }
       .theme-toggle { width: 36px; height: 36px; min-width: 36px; min-height: 36px; }
       .hero-title { font-size: 2rem; }
-      .hero-banner { height: 420px; padding: 1.25rem; }
+      .hero-banner { min-height: auto; height: auto; padding: 1.5rem 1rem 2rem; }
     }
 
     /* Multi-image preview grid in Admin Modal */
@@ -7506,13 +7585,24 @@
 
     // ── Critical UI bindings (must run before slow network sync) ──
     function syncMobileNavMode() {
-      // Force bottom nav on narrow screens OR touch phones (even with "Desktop site" viewport)
-      let touch = false;
+      // Samsung often uses a wide CSS viewport (Desktop site) while the physical screen is still a phone.
+      // Prefer screen size + touch points over CSS hover/pointer alone.
+      const shortEdge = Math.min(window.screen.width || 0, window.screen.height || 0);
+      const touchPoints = navigator.maxTouchPoints || 0;
+      const hasTouch = touchPoints > 0 || ('ontouchstart' in window);
+      let coarse = false;
+      let anyCoarse = false;
+      let noHover = false;
       try {
-        touch = window.matchMedia('(hover: none)').matches || window.matchMedia('(pointer: coarse)').matches;
+        coarse = window.matchMedia('(pointer: coarse)').matches;
+        anyCoarse = window.matchMedia('(any-pointer: coarse)').matches;
+        noHover = window.matchMedia('(hover: none)').matches || window.matchMedia('(any-hover: none)').matches;
       } catch (e) { /* ignore */ }
-      const narrow = window.innerWidth <= 900;
-      document.documentElement.classList.toggle('is-mobile-nav', touch || narrow);
+      const narrowLayout = window.innerWidth <= 900;
+      const phoneScreen = shortEdge > 0 && shortEdge <= 920;
+      const tabletTouch = hasTouch && shortEdge > 0 && shortEdge <= 1280;
+      const force = narrowLayout || phoneScreen || tabletTouch || coarse || anyCoarse || (noHover && hasTouch);
+      document.documentElement.classList.toggle('is-mobile-nav', force);
     }
 
     function bindCriticalNavigation() {
