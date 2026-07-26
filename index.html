@@ -2006,26 +2006,170 @@
     .all-products-layout {
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
-      padding-top: 1.5rem;
+      gap: 1.1rem;
+      padding-top: 1.25rem;
       padding-bottom: 6rem;
       width: 100%;
       max-width: 1400px;
     }
 
     .catalog-toolbar {
-      position: sticky;
-      top: calc(var(--header-h) + 0.35rem);
-      z-index: 40;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: calc(var(--radius) + 4px);
-      padding: 1rem 1.15rem;
+      position: static;
+      top: auto;
+      z-index: auto;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
+      gap: 0.85rem;
+      box-shadow: none;
+      margin-bottom: 0;
+    }
+
+    .catalog-search-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 0.75rem;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-      margin-bottom: 0.35rem;
+      align-items: stretch;
+    }
+
+    .catalog-search-bar {
+      display: flex;
+      align-items: stretch;
+      gap: 0.5rem;
+      width: 100%;
+      min-width: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0.35rem 0.35rem 0.35rem 0.85rem;
+      box-shadow: var(--shadow);
+    }
+
+    .catalog-search-bar .search-wrap {
+      flex: 1;
+      width: 100%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .catalog-search-bar .search-input {
+      width: 100%;
+      padding-left: 2.35rem !important;
+      padding-right: 0.75rem !important;
+      min-height: 46px;
+      font-size: 0.98rem;
+      border-radius: 12px;
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    .catalog-search-bar .search-input:focus {
+      outline: none;
+      box-shadow: none !important;
+    }
+
+    .catalog-search-bar .search-ico {
+      position: absolute;
+      left: 0.15rem;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .catalog-scan-btn {
+      flex-shrink: 0;
+      align-self: center;
+      border: none;
+      background: var(--bg-elevated);
+      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.15rem;
+      color: var(--text);
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .catalog-scan-btn:hover {
+      background: var(--accent-dim);
+      transform: translateY(-1px);
+    }
+
+    .catalog-toolbar-actions {
+      display: flex;
+      align-items: stretch;
+      gap: 0.5rem;
+    }
+
+    .catalog-toolbar-actions .filter-select {
+      min-width: 150px;
+      min-height: 54px;
+      border-radius: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      font-weight: 600;
+    }
+
+    .catalog-toolbar-actions .reset-filters-btn {
+      min-height: 54px;
+      min-width: 72px;
+      border-radius: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      margin: 0;
+      align-self: stretch;
+    }
+
+    .catalog-chips-scroll {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      overflow-x: auto;
+      padding: 0.15rem 0.1rem 0.35rem;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .catalog-chips-scroll .quick-chip-label {
+      flex-shrink: 0;
+    }
+
+    .catalog-chips-scroll .quick-chip {
+      flex-shrink: 0;
+    }
+
+    #catalogBrandChips {
+      display: contents;
+    }
+
+    .catalog-chips-divider {
+      width: 1px;
+      height: 1.1rem;
+      background: var(--border);
+      flex-shrink: 0;
+      margin: 0 0.2rem;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     .quick-chip-row {
@@ -2047,16 +2191,17 @@
     .quick-chip {
       appearance: none;
       border: 1px solid var(--border);
-      background: var(--bg-elevated);
+      background: var(--bg-card);
       color: var(--text);
       font-size: 0.78rem;
       font-weight: 700;
-      padding: 0.38rem 0.75rem;
+      padding: 0.4rem 0.8rem;
       border-radius: 999px;
       cursor: pointer;
       transition: border-color 0.2s, background 0.2s, color 0.2s, transform 0.15s;
       font-family: inherit;
       line-height: 1.2;
+      box-shadow: none;
     }
 
     .quick-chip:hover {
@@ -2149,50 +2294,15 @@
       margin: 0 auto 1rem;
     }
 
-    .catalog-search-bar {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      width: 100%;
-    }
-
-    .catalog-search-bar .search-wrap {
-      flex: 1;
-      width: 100%;
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .catalog-search-bar .search-input {
-      width: 100%;
-      padding-left: 2.65rem !important;
-      padding-right: 3rem !important;
-      min-height: 52px;
-      font-size: 1.02rem;
-      border-radius: 14px;
-      border: 1.5px solid var(--border);
-      background: var(--bg-elevated);
-    }
-
-    .catalog-search-bar .search-input:focus {
-      border-color: var(--accent);
-      outline: none;
-      box-shadow: 0 0 0 3px var(--accent-dim);
-    }
-
-    .catalog-search-bar .search-ico {
-      position: absolute;
-      left: 1rem;
-      color: var(--text-muted);
-      pointer-events: none;
-    }
-
     .catalog-filter-row {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 0.65rem;
       align-items: end;
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.75rem;
     }
 
     .filter-group {
@@ -2231,9 +2341,9 @@
       align-self: end;
     }
 
-    /* Legacy sidebar class kept for safety — now full-width toolbar body */
+    /* Filters stay in their panel row */
     .advanced-filters-panel {
-      display: contents;
+      display: grid;
     }
 
     .master-catalog-main {
@@ -2283,10 +2393,6 @@
       #masterProductGrid .product-image-wrap {
         height: 140px;
       }
-      .catalog-toolbar {
-        position: relative;
-        top: auto;
-      }
     }
 
     .catalog-results-header {
@@ -2328,26 +2434,42 @@
     }
 
     @media (max-width: 900px) {
+      .catalog-search-panel {
+        grid-template-columns: 1fr;
+      }
+      .catalog-toolbar-actions {
+        display: grid;
+        grid-template-columns: 1fr auto;
+      }
+      .catalog-toolbar-actions .filter-select {
+        min-width: 0;
+        width: 100%;
+      }
       .catalog-filter-row {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .catalog-filter-row .reset-filters-btn {
-        grid-column: 1 / -1;
-        width: 100%;
       }
     }
 
     @media (max-width: 480px) {
-      .catalog-toolbar {
-        padding: 0.85rem;
+      .catalog-search-bar {
+        padding: 0.3rem 0.3rem 0.3rem 0.7rem;
         border-radius: 14px;
       }
       .catalog-search-bar .search-input {
+        min-height: 42px;
+        font-size: 0.92rem;
+      }
+      .catalog-scan-btn {
+        width: 40px;
+        height: 40px;
+      }
+      .catalog-toolbar-actions .filter-select,
+      .catalog-toolbar-actions .reset-filters-btn {
         min-height: 48px;
-        font-size: 0.95rem;
       }
       .catalog-filter-row {
         grid-template-columns: 1fr;
+        padding: 0.65rem;
       }
       #masterProductGrid .product-image-wrap {
         height: 140px;
@@ -3241,12 +3363,12 @@
     }
 
     .catalog-toolbar {
-      border-radius: 20px;
-      box-shadow: var(--shadow);
+      /* scrolls with page — never sticky */
+      position: static;
     }
 
-    .catalog-search-bar .search-input {
-      border-radius: 14px !important;
+    .catalog-search-bar {
+      border-radius: 16px;
     }
 
     .product-card {
@@ -3497,21 +3619,35 @@
     </div>
     <div class="section-container all-products-layout">
       <div class="catalog-toolbar" id="catalogToolbar">
-        <div class="catalog-search-bar">
-          <div class="search-wrap">
-            <svg class="search-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="search" class="search-input" id="masterSearch" placeholder="Search name, part number, brand, or vehicle..." autocomplete="off" enterkeyhint="search">
-            <button class="btn btn-ghost scan-btn" id="masterScanBtn" style="position: absolute; right: 0.45rem; border: none; background: transparent; cursor: pointer; font-size: 1.15rem; padding: 0.35rem;" title="Scan Barcode">📷</button>
+        <div class="catalog-search-panel">
+          <div class="catalog-search-bar">
+            <div class="search-wrap">
+              <svg class="search-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="search" class="search-input" id="masterSearch" placeholder="Search name, part number, brand, or vehicle..." autocomplete="off" enterkeyhint="search">
+            </div>
+            <button type="button" class="catalog-scan-btn" id="masterScanBtn" title="Scan Barcode" aria-label="Scan barcode">📷</button>
+          </div>
+          <div class="catalog-toolbar-actions">
+            <label class="visually-hidden" for="masterSortFilter">Sort By</label>
+            <select class="filter-select" id="masterSortFilter" aria-label="Sort by">
+              <option value="relevance">Most relevant</option>
+              <option value="name_asc">Name (A - Z)</option>
+              <option value="name_desc">Name (Z - A)</option>
+              <option value="brand_asc">Brand (A - Z)</option>
+              <option value="category_asc">Category (A - Z)</option>
+              <option value="part_asc">Part Number (A - Z)</option>
+            </select>
+            <button class="btn btn-ghost btn-sm reset-filters-btn" id="masterResetFiltersBtn" type="button">Reset</button>
           </div>
         </div>
-        <div class="quick-chip-row" id="catalogVehicleChips" aria-label="Vehicle quick filters">
+        <div class="catalog-chips-scroll" id="catalogChipsScroll" aria-label="Quick filters">
           <span class="quick-chip-label">Vehicle</span>
           <button type="button" class="quick-chip" data-vehicle="tata">Tata</button>
           <button type="button" class="quick-chip" data-vehicle="hino">Hino</button>
           <button type="button" class="quick-chip" data-vehicle="leyland">Leyland</button>
-        </div>
-        <div class="quick-chip-row" id="catalogBrandChips" aria-label="Brand quick filters">
+          <span class="catalog-chips-divider" aria-hidden="true"></span>
           <span class="quick-chip-label">Brand</span>
+          <span id="catalogBrandChips"></span>
         </div>
         <div class="catalog-filter-row advanced-filters-panel">
           <div class="filter-group">
@@ -3532,18 +3668,6 @@
               <option value="">All Vehicles</option>
             </select>
           </div>
-          <div class="filter-group">
-            <label class="filter-label" for="masterSortFilter">Sort By</label>
-            <select class="filter-select" id="masterSortFilter">
-              <option value="relevance">Most relevant</option>
-              <option value="name_asc">Name (A - Z)</option>
-              <option value="name_desc">Name (Z - A)</option>
-              <option value="brand_asc">Brand (A - Z)</option>
-              <option value="category_asc">Category (A - Z)</option>
-              <option value="part_asc">Part Number (A - Z)</option>
-            </select>
-          </div>
-          <button class="btn btn-ghost btn-sm reset-filters-btn" id="masterResetFiltersBtn">Reset</button>
         </div>
       </div>
 
@@ -4187,7 +4311,7 @@
         }
       });
       const top = Object.entries(brandCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
-      row.innerHTML = '<span class="quick-chip-label">Brand</span>' + top.map(([b]) =>
+      row.innerHTML = top.map(([b]) =>
         `<button type="button" class="quick-chip" data-brand="${esc(b)}">${esc(b)}</button>`
       ).join('');
       row.dataset.ready = '1';
