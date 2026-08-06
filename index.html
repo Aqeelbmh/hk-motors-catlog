@@ -5030,20 +5030,50 @@
     </div>
   </div>
 
-  <!-- Barcode Scanner Modal -->
+  <!-- Barcode Scanner & Manual Search Modal -->
   <div class="modal-overlay" id="scannerModal">
-    <div class="modal" style="max-width: 450px; padding: 1.5rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">📷 Scan Barcode / QR Code</h3>
-        <button class="btn btn-ghost btn-sm" id="closeScannerBtn" style="border-radius: 50%; width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center;">✕</button>
+    <div class="modal" style="max-width: 480px; padding: 1.25rem 1.5rem; border-radius: 18px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; color: var(--text-main);">
+          🔍 Search & Barcode Scan
+        </h3>
+        <button class="btn btn-ghost btn-sm" id="closeScannerBtn" style="border-radius: 50%; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;" aria-label="Close modal">✕</button>
       </div>
-      <div id="scannerReader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000; border: 1px solid var(--border); aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; position: relative;">
-        <!-- Camera viewfinder element -->
+
+      <!-- Mode Switcher Tabs (Camera vs Typing) -->
+      <div style="display: flex; background: var(--bg-alt, rgba(255,255,255,0.06)); padding: 0.25rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border); gap: 0.25rem;">
+        <button type="button" id="scannerModeCameraTab" class="btn btn-sm" style="flex: 1; border-radius: 9px; font-weight: 700; padding: 0.5rem; background: var(--surface-panel); color: var(--text-main); border: 1px solid var(--border); transition: all 0.2s ease;">
+          📷 Camera Scan
+        </button>
+        <button type="button" id="scannerModeTypeTab" class="btn btn-sm btn-ghost" style="flex: 1; border-radius: 9px; font-weight: 700; padding: 0.5rem; color: var(--text-muted); transition: all 0.2s ease;">
+          ⌨️ Type Search
+        </button>
       </div>
-      <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 0.75rem;">
-        <select id="scannerCameraSelect" class="filter-select" style="max-width: 250px; font-size: 0.8rem; padding: 0.5rem 2rem 0.5rem 1rem;"></select>
+
+      <!-- Camera Viewfinder Section -->
+      <div id="scannerCameraSection">
+        <div id="scannerReader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000; border: 1px solid var(--border); aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; position: relative;">
+          <!-- Camera viewfinder element -->
+        </div>
+        <div style="margin-top: 0.85rem; display: flex; justify-content: center; gap: 0.75rem;">
+          <select id="scannerCameraSelect" class="filter-select" style="max-width: 260px; font-size: 0.82rem; padding: 0.5rem 2rem 0.5rem 1rem;"></select>
+        </div>
+        <p style="text-align: center; color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Align the barcode within the camera viewfinder to scan.</p>
       </div>
-      <p style="text-align: center; color: var(--text-muted); font-size: 0.75rem; margin-top: 0.75rem;">Align the barcode within the camera viewfinder to scan.</p>
+
+      <!-- Manual Typing Section -->
+      <div id="scannerManualSection" style="display: none; background: var(--surface); padding: 1rem; border-radius: 12px; border: 1px solid var(--border);">
+        <label for="scannerManualInput" style="display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">
+          ⌨️ Enter Product ID, Barcode, or Name:
+        </label>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <input type="text" id="scannerManualInput" class="search-input" placeholder="e.g. 1001, Brake Pad, TOY-88..." style="flex: 1; padding: 0.6rem 0.85rem; font-size: 0.9rem; border-radius: 10px;" enterkeyhint="search" autocomplete="off">
+          <button type="button" class="btn btn-accent btn-sm" id="scannerManualSubmitBtn" style="white-space: nowrap; border-radius: 10px; padding: 0.6rem 1.1rem; font-weight: 700;">Search 🔍</button>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.75rem; margin: 0; line-height: 1.4;">
+          Type any product ID, barcode number, brand, or vehicle name to search instantly.
+        </p>
+      </div>
     </div>
   </div>
 
@@ -8240,14 +8270,92 @@
       showToast('Product deleted successfully', 'success');
     }
 
-    // ── Barcode & QR Code Camera Scanner ──
+    // ── Barcode & QR Code Camera Scanner & Manual Search ──
     let html5QrCode = null;
     let scannerActiveInputId = null;
+
+    function setScannerTab(mode) {
+      const cameraTab = document.getElementById('scannerModeCameraTab');
+      const typeTab = document.getElementById('scannerModeTypeTab');
+      const cameraSec = document.getElementById('scannerCameraSection');
+      const manualSec = document.getElementById('scannerManualSection');
+      
+      if (!cameraTab || !typeTab || !cameraSec || !manualSec) return;
+
+      if (mode === 'type') {
+        cameraTab.classList.add('btn-ghost');
+        cameraTab.style.background = 'transparent';
+        cameraTab.style.color = 'var(--text-muted)';
+        cameraTab.style.border = 'none';
+
+        typeTab.classList.remove('btn-ghost');
+        typeTab.style.background = 'var(--surface-panel)';
+        typeTab.style.color = 'var(--text-main)';
+        typeTab.style.border = '1px solid var(--border)';
+
+        cameraSec.style.display = 'none';
+        manualSec.style.display = 'block';
+
+        const inputEl = document.getElementById('scannerManualInput');
+        if (inputEl) {
+          setTimeout(() => inputEl.focus(), 100);
+        }
+      } else {
+        typeTab.classList.add('btn-ghost');
+        typeTab.style.background = 'transparent';
+        typeTab.style.color = 'var(--text-muted)';
+        typeTab.style.border = 'none';
+
+        cameraTab.classList.remove('btn-ghost');
+        cameraTab.style.background = 'var(--surface-panel)';
+        cameraTab.style.color = 'var(--text-main)';
+        cameraTab.style.border = '1px solid var(--border)';
+
+        manualSec.style.display = 'none';
+        cameraSec.style.display = 'block';
+      }
+    }
+
+    function submitScannerManualInput() {
+      const manualInput = document.getElementById('scannerManualInput');
+      const val = manualInput ? manualInput.value.trim() : '';
+      const targetId = scannerActiveInputId || 'adminSearch';
+      const input = document.getElementById(targetId);
+
+      if (input) {
+        input.value = val;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+
+        if (targetId === 'heroSearchInput') {
+          const heroBtn = document.getElementById('heroSearchBtn');
+          if (heroBtn) heroBtn.click();
+        } else if (targetId === 'masterSearch') {
+          renderAllProductsView(true);
+        } else if (targetId === 'adminSearch') {
+          renderAdminTable();
+        }
+      }
+
+      showToast(val ? `Search applied: "${val}"` : 'Search reset', 'info');
+      stopScanner();
+    }
 
     async function startScanner(inputId) {
       scannerActiveInputId = inputId;
       const modal = document.getElementById('scannerModal');
       modal.classList.add('open');
+
+      // Pre-fill manual search input with existing search query if present
+      const activeInput = document.getElementById(inputId);
+      const manualInput = document.getElementById('scannerManualInput');
+      if (manualInput && activeInput) {
+        manualInput.value = activeInput.value || '';
+      }
+
+      // Default to Camera view
+      setScannerTab('camera');
+
       const reader = document.getElementById('scannerReader');
       const cameraSelect = document.getElementById('scannerCameraSelect');
       
@@ -8255,7 +8363,7 @@
       cameraSelect.innerHTML = '<option value="environment">Rear Camera (Default)</option>';
 
       if (typeof Html5Qrcode === 'undefined') {
-        reader.innerHTML = '<p style="color:var(--danger);padding:1.5rem;text-align:center;font-size:0.85rem;">Barcode scanner library failed to load.<br><span style="font-size:0.75rem;color:var(--text-muted);">Check your internet connection and refresh.</span></p>';
+        reader.innerHTML = '<p style="color:var(--danger);padding:1.5rem;text-align:center;font-size:0.85rem;">Barcode scanner library failed to load.<br><span style="font-size:0.75rem;color:var(--text-muted);">Check internet connection or use manual search tab above.</span></p>';
         return;
       }
 
@@ -8312,8 +8420,7 @@
           reader.innerHTML = `<div style="color:var(--danger);padding:1.5rem;text-align:center;font-size:0.85rem;">
             <strong>Unable to access camera</strong>
             <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;line-height:1.4;">
-              Please ensure camera permissions are allowed in your browser settings.<br>
-              <em>Details: ${esc(err2.message || err.message || 'Permission denied')}</em>
+              Ensure camera permissions are allowed, or switch to the <strong>Type Search</strong> tab above to enter code manually.
             </p>
           </div>`;
         }
@@ -9111,6 +9218,24 @@
       document.getElementById('scannerModal').addEventListener('click', e => {
         if (e.target.id === 'scannerModal') stopScanner();
       });
+
+      // Scanner Modal Dual Mode (Camera Tab / Type Tab & Manual Submit)
+      const cameraTabBtn = document.getElementById('scannerModeCameraTab');
+      const typeTabBtn = document.getElementById('scannerModeTypeTab');
+      const manualSubmitBtn = document.getElementById('scannerManualSubmitBtn');
+      const manualInputEl = document.getElementById('scannerManualInput');
+
+      if (cameraTabBtn) cameraTabBtn.addEventListener('click', () => setScannerTab('camera'));
+      if (typeTabBtn) typeTabBtn.addEventListener('click', () => setScannerTab('type'));
+      if (manualSubmitBtn) manualSubmitBtn.addEventListener('click', submitScannerManualInput);
+      if (manualInputEl) {
+        manualInputEl.addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            submitScannerManualInput();
+          }
+        });
+      }
 
       // Dashboard Stats Cards Click Toggles
       document.getElementById('statCardTotalProducts').addEventListener('click', () => {
