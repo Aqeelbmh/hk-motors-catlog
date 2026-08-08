@@ -5280,63 +5280,98 @@
     let activeVehicleChip = '';
     let activeBrandChip = '';
 
-    // ── Fuzzy Search Matcher ──
-    function fuzzyMatch(text, query) {
-      if (!query) return true;
-      text = String(text || '').toLowerCase().trim();
-      query = String(query).toLowerCase().trim();
-      if (text.includes(query)) return true;
-      
-      const terms = query.split(/\s+/);
-      return terms.every(term => {
-        let textIdx = 0;
-        for (let termIdx = 0; termIdx < term.length; termIdx++) {
-          textIdx = text.indexOf(term[termIdx], textIdx);
-          if (textIdx === -1) return false;
-          textIdx++; // move past matching character
-        }
-        return true;
-      });
+    // ── Precise Search Matcher & Normalizer ──
+    function normalizeCode(str) {
+      return String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     }
 
     function productSearchBlob(p) {
+      if (!p) return '';
       const partNo = String(p.barcode || p.productId || '');
+      const cleanPartNo = normalizeCode(partNo);
       const stdCat = getStandardCategory(p.category, p.productName);
-      return `${p.productName || ''} ${partNo} ${p.brand || ''} ${p.fit || ''} ${p.category || ''} ${p.description || ''} ${stdCat}`.toLowerCase();
+      return `${p.productName || ''} ${partNo} ${cleanPartNo} ${p.brand || ''} ${p.fit || ''} ${p.type || ''} ${p.category || ''} ${p.description || ''} ${stdCat}`.toLowerCase();
+    }
+
+    /** Strict, accurate multi-word & substring search matching */
+    function fuzzyMatch(text, query) {
+      if (!query) return true;
+      const q = String(query).toLowerCase().trim();
+      if (!q) return true;
+
+      const normText = normalizeCode(text);
+      const normQ = normalizeCode(q);
+      const fullText = String(text || '').toLowerCase();
+
+      // Direct substring match or normalized part number match
+      if (fullText.includes(q)) return true;
+      if (normQ.length >= 2 && normText.includes(normQ)) return true;
+
+      // Multi-word AND logic: EVERY word term in query must match in fullText or normalized text
+      const terms = q.split(/\s+/).filter(Boolean);
+      if (terms.length === 0) return true;
+
+      return terms.every(term => {
+        const normTerm = normalizeCode(term);
+        return fullText.includes(term) || (normTerm.length >= 2 && normText.includes(normTerm));
+      });
+    }
+
+    /** Helper: Determine if a product matches a given search query */
+    function matchesProductSearch(p, query) {
+      if (!query) return true;
+      const q = String(query).toLowerCase().trim();
+      if (!q) return true;
+      const blob = productSearchBlob(p);
+      return fuzzyMatch(blob, q);
     }
 
     /** Rank matches so part numbers and exact name hits float to the top */
     function scoreSearchMatch(p, query) {
       if (!query) return 0;
       const q = String(query).toLowerCase().trim();
+      if (!q) return 0;
+
+      const blob = productSearchBlob(p);
+      if (!fuzzyMatch(blob, q)) return 0; // Must satisfy search constraints!
+
       const name = String(p.productName || '').toLowerCase();
       const part = String(p.barcode || p.productId || '').toLowerCase();
       const brand = String(p.brand || '').toLowerCase();
       const fit = String(p.fit || '').toLowerCase();
-      const blob = productSearchBlob(p);
-      let score = 0;
+      const normPart = normalizeCode(part);
+      const normQ = normalizeCode(q);
 
-      if (part === q) score += 1000;
-      else if (part.startsWith(q)) score += 520;
-      else if (part.includes(q)) score += 320;
+      let score = 10; // Base score for passing search match
 
+      // Part number bonuses (exact, prefix, substring)
+      if (part === q || (normPart && normPart === normQ)) score += 1000;
+      else if (part.startsWith(q) || (normPart && normPart.startsWith(normQ))) score += 520;
+      else if (part.includes(q) || (normPart && normPart.includes(normQ))) score += 320;
+
+      // Product Name bonuses
       if (name === q) score += 420;
       else if (name.startsWith(q)) score += 260;
       else if (name.includes(q)) score += 160;
 
+      // Brand bonuses
       if (brand === q) score += 140;
       else if (brand.includes(q)) score += 90;
 
+      // Vehicle Fitment bonuses
       if (fit.includes(q)) score += 70;
 
-      q.split(/\s+/).filter(Boolean).forEach(term => {
-        if (part.includes(term)) score += 35;
-        if (name.includes(term)) score += 22;
-        if (brand.includes(term)) score += 12;
+      // Term bonuses
+      const terms = q.split(/\s+/).filter(Boolean);
+      terms.forEach(term => {
+        const normTerm = normalizeCode(term);
+        if (part === term || (normPart && normPart === normTerm)) score += 50;
+        else if (part.includes(term)) score += 35;
+        if (name.includes(term)) score += 25;
+        if (brand.includes(term)) score += 15;
         if (fit.includes(term)) score += 10;
       });
 
-      if (score === 0 && fuzzyMatch(blob, q)) score = 1;
       return score;
     }
 
@@ -6556,13 +6591,13 @@
       allMasterFiltered = catalog.filter(p => {
         const stdCat = getStandardCategory(p.category, p.productName);
         const blob = productSearchBlob(p);
-        const matchSearch = !searchQuery || scoreSearchMatch(p, searchQuery) > 0 || fuzzyMatch(blob, searchQuery);
+        const matchSearch = !searchQuery || matchesProductSearch(p, searchQuery);
 
-        const matchCat = !categoryFilter || stdCat === categoryFilter;
+        const matchCat = !categoryFilter || stdCat === categoryFilter || p.category === categoryFilter;
         const effectiveBrand = brandFilter || activeBrandChip;
-        const matchBrand = !effectiveBrand || p.brand === effectiveBrand;
-        const matchVehicle = !vehicleFilter || p.fit === vehicleFilter;
-        const matchVehicleChip = !activeVehicleChip || blob.includes(activeVehicleChip);
+        const matchBrand = !effectiveBrand || (p.brand || '').toLowerCase().trim() === effectiveBrand.toLowerCase().trim();
+        const matchVehicle = !vehicleFilter || (p.fit || '').toLowerCase().includes(vehicleFilter.toLowerCase());
+        const matchVehicleChip = !activeVehicleChip || blob.includes(activeVehicleChip.toLowerCase());
 
         return matchSearch && matchCat && matchBrand && matchVehicle && matchVehicleChip;
       });
@@ -7856,17 +7891,24 @@
       const category = categoryEl.value;
       const noImageOnly = noImageEl.checked;
 
-      populateCategoryFilter('adminCategoryFilter', category);
+      // Populate category options if empty
+      if (categoryEl.options.length <= 1) {
+        populateCategoryFilter('adminCategoryFilter', category);
+      }
 
       const filtered = products.filter(p => {
-        const matchCat = !category || p.category === category;
+        const stdCat = getStandardCategory(p.category, p.productName);
+        const matchCat = !category || p.category === category || stdCat === category;
         if (!matchCat) return false;
         if (noImageOnly && imageIds.has(String(p.productId))) return false;
         if (adminLowStockFilterActive && !isLowStock(p)) return false;
         if (!search) return true;
-        const combinedText = COLUMNS.map(col => String(p[col] || '')).join(' ');
-        return fuzzyMatch(combinedText, search);
+        return matchesProductSearch(p, search);
       });
+
+      if (search) {
+        filtered.sort((a, b) => scoreSearchMatch(b, search) - scoreSearchMatch(a, search));
+      }
 
       // Calculate and render dashboard statistics card metrics
       const lowCount = products.filter(isLowStock).length;
