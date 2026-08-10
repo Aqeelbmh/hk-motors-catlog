@@ -2337,6 +2337,37 @@
       }
     }
 
+    /* Visual Lens Search Styles */
+    .lens-match-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 12px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+      z-index: 5;
+      letter-spacing: 0.02em;
+    }
+
+    .lens-search-banner {
+      background: var(--surface-panel);
+      border: 1.5px solid var(--accent);
+      border-radius: 16px;
+      padding: 0.85rem 1.1rem;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      box-shadow: 0 6px 20px rgba(225, 29, 46, 0.18);
+      animation: fadeIn 0.3s ease;
+    }
+
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
@@ -5420,6 +5451,126 @@
       return false;
     }
 
+    // ── Visual Lens Search Engine (Image Similarity Matcher) ──
+    let activeLensSearchImage = null;
+    let lensSignaturesCache = new Map();
+
+    function getImageSignature(imgSrc) {
+      return new Promise((resolve) => {
+        if (!imgSrc) return resolve(null);
+        if (lensSignaturesCache.has(imgSrc)) return resolve(lensSignaturesCache.get(imgSrc));
+
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 16;
+            canvas.height = 16;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, 16, 16);
+            const imgData = ctx.getImageData(0, 0, 16, 16).data;
+            
+            const sig = [];
+            let totalR = 0, totalG = 0, totalB = 0;
+            for (let i = 0; i < imgData.length; i += 4) {
+              const r = imgData[i];
+              const g = imgData[i + 1];
+              const b = imgData[i + 2];
+              sig.push(r, g, b);
+              totalR += r;
+              totalG += g;
+              totalB += b;
+            }
+            const totalPixels = 256;
+            sig.push(totalR / totalPixels, totalG / totalPixels, totalB / totalPixels);
+            sig.push((img.naturalWidth || 1) / (img.naturalHeight || 1));
+            lensSignaturesCache.set(imgSrc, sig);
+            resolve(sig);
+          } catch (e) {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        img.src = imgSrc;
+      });
+    }
+
+    function compareImageSignatures(sig1, sig2) {
+      if (!sig1 || !sig2 || sig1.length !== sig2.length) return 0;
+      let sumSqDiff = 0;
+      const len = sig1.length - 1;
+      for (let i = 0; i < len; i++) {
+        const diff = sig1[i] - sig2[i];
+        sumSqDiff += diff * diff;
+      }
+      const maxDist = len * (255 * 255);
+      const distRatio = Math.sqrt(sumSqDiff / maxDist);
+      let similarity = Math.max(0, Math.min(100, Math.round((1 - distRatio * 1.85) * 100)));
+      
+      const aspect1 = sig1[sig1.length - 1];
+      const aspect2 = sig2[sig2.length - 1];
+      if (aspect1 && aspect2) {
+        const aspectDiff = Math.abs(aspect1 - aspect2) / Math.max(aspect1, aspect2);
+        if (aspectDiff > 0.45) similarity = Math.max(0, similarity - 15);
+      }
+      return similarity;
+    }
+
+    async function runVisualLensSearch(fileOrSrc) {
+      if (!fileOrSrc) return;
+      showToast('Analyzing photo signature for Lens Search...', 'info');
+
+      let dataUrl = fileOrSrc;
+      if (fileOrSrc instanceof File || fileOrSrc instanceof Blob) {
+        dataUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.readAsDataURL(fileOrSrc);
+        });
+      }
+
+      const querySig = await getImageSignature(dataUrl);
+      if (!querySig) {
+        showToast('Unable to analyze image for Lens search', 'error');
+        return;
+      }
+
+      activeLensSearchImage = dataUrl;
+      const catalog = getCustomerCatalogProducts();
+      let matchCount = 0;
+
+      for (const p of catalog) {
+        const firstCloudImg = p.image_urls && p.image_urls.length > 0 ? p.image_urls[0] : null;
+        const firstLocalImg = getFirstImage(p.productId);
+        const imgSrc = firstLocalImg || firstCloudImg;
+
+        if (imgSrc) {
+          const pSig = await getImageSignature(imgSrc);
+          if (pSig) {
+            p._lensMatch = compareImageSignatures(querySig, pSig);
+            if (p._lensMatch >= 25) matchCount++;
+          } else {
+            p._lensMatch = 0;
+          }
+        } else {
+          p._lensMatch = 0;
+        }
+      }
+
+      showToast(`Lens Search complete! Found ${matchCount} visually matching product${matchCount === 1 ? '' : 's'}`, 'success');
+      stopScanner();
+      window.location.hash = '#/products';
+      renderAllProductsView(true);
+    }
+
+    function clearLensSearchFilter() {
+      activeLensSearchImage = null;
+      products.forEach(p => { delete p._lensMatch; });
+      renderAllProductsView(true);
+      showToast('Visual Lens filter cleared', 'info');
+    }
+
     /** Rank matches so part numbers and exact name hits float to the top */
     function scoreSearchMatch(p, query) {
       if (!query) return 0;
@@ -6482,6 +6633,7 @@
       return `
         <div class="product-card" data-id="${esc(id)}" role="link" tabindex="0" title="View details">
           <div class="product-image-wrap" data-img-id="${esc(id)}" data-loaded="${hasImg ? '1' : '0'}">
+            ${p._lensMatch && p._lensMatch > 0 ? `<div class="lens-match-badge">📸 ${p._lensMatch}% Match</div>` : ''}
             ${hasImg
               ? `<img src="${imgSrc}" alt="${esc(p.productName)}" loading="lazy">`
               : imagePlaceholderHtml()}
@@ -6646,7 +6798,6 @@
           };
         });
       } else if (carousel) {
-        // Sync active state in carousel when categoryFilter updates
         carousel.querySelectorAll('.category-carousel-item').forEach(item => {
           const catVal = item.dataset.category;
           const isActive = (!categoryFilter && !catVal) || (categoryFilter === catVal);
@@ -6704,13 +6855,89 @@
         }
       }
 
-      // Sorting
-      allMasterFiltered.sort((a, b) => {
-        if (sortVal === 'relevance') {
-          if (searchQuery) {
-            const diff = scoreSearchMatch(b, searchQuery) - scoreSearchMatch(a, searchQuery);
-            if (diff !== 0) return diff;
+      // Sorting (Lens Search vs Standard Sorting)
+      if (activeLensSearchImage) {
+        allMasterFiltered = allMasterFiltered.filter(p => (p._lensMatch || 0) >= 15);
+        allMasterFiltered.sort((a, b) => (b._lensMatch || 0) - (a._lensMatch || 0));
+      } else {
+        allMasterFiltered.sort((a, b) => {
+          if (sortVal === 'relevance') {
+            if (searchQuery) {
+              const diff = scoreSearchMatch(b, searchQuery) - scoreSearchMatch(a, searchQuery);
+              if (diff !== 0) return diff;
+            }
+            return (a.productName || '').localeCompare(b.productName || '');
           }
+          if (sortVal === 'name_asc') return (a.productName || '').localeCompare(b.productName || '');
+          if (sortVal === 'name_desc') return (b.productName || '').localeCompare(a.productName || '');
+          if (sortVal === 'brand_asc') return (a.brand || '').localeCompare(b.brand || '');
+          if (sortVal === 'category_asc') return (getStandardCategory(a.category, a.productName)).localeCompare(getStandardCategory(b.category, b.productName));
+          if (sortVal === 'part_asc') return (a.barcode || a.productId || '').localeCompare(b.barcode || b.productId || '');
+          if (sortVal === 'price_asc') return parseFloat(a.retailPrice || 0) - parseFloat(b.retailPrice || 0);
+          if (sortVal === 'price_desc') return parseFloat(b.retailPrice || 0) - parseFloat(a.retailPrice || 0);
+          return 0;
+        });
+      }
+
+      const filterBits = [];
+      if (activeLensSearchImage) filterBits.push('📸 Visual Lens Filter');
+      if (searchQuery) filterBits.push(`“${esc(searchQuery)}”`);
+      if (activeVehicleChip) filterBits.push(esc(activeVehicleChip));
+      document.getElementById('masterResultsCount').innerHTML =
+        `<strong>${allMasterFiltered.length}</strong> product${allMasterFiltered.length === 1 ? '' : 's'} found` +
+        (filterBits.length ? ` for ${filterBits.join(' · ')}` : '');
+
+      syncQuickChipUI();
+
+      if (resetPagination) {
+        currentMasterPage = 1;
+      }
+
+      renderMasterPage(resetPagination);
+    }
+
+    function renderMasterPage(isFirst) {
+      const grid = document.getElementById('masterProductGrid');
+      const loadMoreBtn = document.getElementById('masterLoadMoreBtn');
+      
+      const startIndex = (currentMasterPage - 1) * MASTER_PAGE_SIZE;
+      const endIndex = startIndex + MASTER_PAGE_SIZE;
+      const pageList = allMasterFiltered.slice(startIndex, endIndex);
+
+      const cardsHtml = pageList.map(renderProductCard).join('');
+      if (isFirst) {
+        const lensBannerHtml = activeLensSearchImage
+          ? `<div class="lens-search-banner" style="background: var(--surface-panel); border: 1.5px solid var(--accent); border-radius: 16px; padding: 0.85rem 1.1rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; box-shadow: 0 6px 20px rgba(225, 29, 46, 0.18);">
+              <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <img src="${activeLensSearchImage}" style="width: 44px; height: 44px; border-radius: 10px; object-fit: cover; border: 2px solid var(--accent);" alt="Lens Reference Photo">
+                <div>
+                  <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">📸 Visual Lens Search Active</strong>
+                  <span style="font-size: 0.78rem; color: var(--text-muted);">Ranking catalog products by visual similarity to your uploaded photo</span>
+                </div>
+              </div>
+              <button type="button" class="btn btn-ghost btn-sm" id="clearLensSearchBtn" style="white-space: nowrap; border-radius: 10px; padding: 0.5rem 0.9rem; font-weight: 700; border: 1px solid var(--border);">✕ Clear Lens Filter</button>
+            </div>`
+          : '';
+
+        if (allMasterFiltered.length === 0) {
+          grid.innerHTML = `${lensBannerHtml}
+            <div class="product-grid">
+              <div class="catalog-empty-state">
+                <h3>No products found</h3>
+                <p>Try a different search, filter, or reset.</p>
+              </div>
+            </div>`;
+          loadMoreBtn.style.display = 'none';
+        } else {
+          grid.innerHTML = `${lensBannerHtml}<div class="product-grid">${cardsHtml}</div>`;
+        }
+
+        const clearBtn = document.getElementById('clearLensSearchBtn');
+        if (clearBtn) clearBtn.addEventListener('click', clearLensSearchFilter);
+      } else {
+        const existing = grid.querySelector('.product-grid');
+        if (existing) existing.insertAdjacentHTML('beforeend', cardsHtml);
+        else grid.innerHTML = `<div class="product-grid">${cardsHtml}</div>`;
           return (a.productName || '').localeCompare(b.productName || '');
         }
         if (sortVal === 'name_asc') return (a.productName || '').localeCompare(b.productName || '');
@@ -9481,16 +9708,17 @@
         dropzone.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', e => {
           if (e.target.files && e.target.files[0]) {
-            processSearchImage(e.target.files[0]);
+            runVisualLensSearch(e.target.files[0]);
           }
         });
       }
       if (analyzeBtn && fileInput) {
         analyzeBtn.addEventListener('click', () => {
-          if (selectedSearchImageFile) {
-            processSearchImage(selectedSearchImageFile);
-          } else if (fileInput.files && fileInput.files[0]) {
-            processSearchImage(fileInput.files[0]);
+          const fileToSearch = selectedSearchImageFile || (fileInput.files && fileInput.files[0]);
+          if (fileToSearch) {
+            runVisualLensSearch(fileToSearch);
+          } else {
+            showToast('Please upload or select an image file first', 'info');
           }
         });
       }
