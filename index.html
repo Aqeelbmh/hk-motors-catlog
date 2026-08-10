@@ -5451,7 +5451,7 @@
       return false;
     }
 
-    // ── Visual Lens Search Engine (Image Similarity Matcher) ──
+    // ── High-Accuracy Visual Lens Search Engine (32x32 Center-Weighted Edge & Color Matrix) ──
     let activeLensSearchImage = null;
     let lensSignaturesCache = new Map();
 
@@ -5464,29 +5464,98 @@
         img.crossOrigin = 'Anonymous';
         img.onload = () => {
           try {
+            const width = 32;
+            const height = 32;
             const canvas = document.createElement('canvas');
-            canvas.width = 16;
-            canvas.height = 16;
+            canvas.width = width;
+            canvas.height = height;
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, 16, 16);
-            const imgData = ctx.getImageData(0, 0, 16, 16).data;
+            ctx.drawImage(img, 0, 0, width, height);
             
-            const sig = [];
+            const imgData = ctx.getImageData(0, 0, width, height);
+            const data = imgData.data;
+
+            // 1. Extract 32x32 Spatial Color & Luminance Grid with Center Weighting
+            const rgbGrid = new Float32Array(width * height * 3);
+            const lumGrid = new Float32Array(width * height);
             let totalR = 0, totalG = 0, totalB = 0;
-            for (let i = 0; i < imgData.length; i += 4) {
-              const r = imgData[i];
-              const g = imgData[i + 1];
-              const b = imgData[i + 2];
-              sig.push(r, g, b);
-              totalR += r;
-              totalG += g;
-              totalB += b;
+            const hueBins = new Float32Array(8); // Red, Orange, Yellow, Green, Cyan, Blue, Magenta, Gray
+
+            let ptr = 0;
+            for (let y = 0; y < height; y++) {
+              for (let x = 0; x < width; x++) {
+                const idx = (y * width + x) * 4;
+                const r = data[idx];
+                const g = data[idx + 1];
+                const b = data[idx + 2];
+                const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+                lumGrid[y * width + x] = lum;
+
+                // Center weighting multiplier (center pixels weighted 1.5x, edges 0.8x)
+                const dx = (x - 15.5) / 15.5;
+                const dy = (y - 15.5) / 15.5;
+                const distFromCenter = Math.sqrt(dx * dx + dy * dy);
+                const weight = Math.max(0.6, 1.6 - distFromCenter * 0.7);
+
+                rgbGrid[ptr++] = r * weight;
+                rgbGrid[ptr++] = g * weight;
+                rgbGrid[ptr++] = b * weight;
+                totalR += r;
+                totalG += g;
+                totalB += b;
+
+                // Hue classification
+                const max = Math.max(r, g, b);
+                const min = Math.min(r, g, b);
+                const diff = max - min;
+                if (diff < 22) {
+                  hueBins[7] += 1; // Grayscale / Metallic / Dark
+                } else {
+                  let hue = 0;
+                  if (max === r) hue = (g - b) / diff + (g < b ? 6 : 0);
+                  else if (max === g) hue = (b - r) / diff + 2;
+                  else hue = (r - g) / diff + 4;
+                  hue *= 60;
+                  const binIdx = Math.floor(hue / 45) % 7;
+                  hueBins[binIdx] += 1;
+                }
+              }
             }
-            const totalPixels = 256;
-            sig.push(totalR / totalPixels, totalG / totalPixels, totalB / totalPixels);
-            sig.push((img.naturalWidth || 1) / (img.naturalHeight || 1));
-            lensSignaturesCache.set(imgSrc, sig);
-            resolve(sig);
+
+            // 2. Sobel Edge Gradient Signature (Shape & Contour Detection)
+            const edgeGrid = new Float32Array(width * height);
+            for (let y = 1; y < height - 1; y++) {
+              for (let x = 1; x < width - 1; x++) {
+                const gx = 
+                  -lumGrid[(y - 1) * width + (x - 1)] + lumGrid[(y - 1) * width + (x + 1)]
+                  -2 * lumGrid[y * width + (x - 1)] + 2 * lumGrid[y * width + (x + 1)]
+                  -lumGrid[(y + 1) * width + (x - 1)] + lumGrid[(y + 1) * width + (x + 1)];
+
+                const gy = 
+                  -lumGrid[(y - 1) * width + (x - 1)] - 2 * lumGrid[(y - 1) * width + x] - lumGrid[(y - 1) * width + (x + 1)]
+                  +lumGrid[(y + 1) * width + (x - 1)] + 2 * lumGrid[(y + 1) * width + x] + lumGrid[(y + 1) * width + (x + 1)];
+
+                edgeGrid[y * width + x] = Math.sqrt(gx * gx + gy * gy);
+              }
+            }
+
+            // Normalize Hue Bins
+            const totalPixels = width * height;
+            for (let i = 0; i < 8; i++) hueBins[i] /= totalPixels;
+
+            const aspect = (img.naturalWidth || 1) / (img.naturalHeight || 1);
+            const signature = {
+              rgbGrid,
+              edgeGrid,
+              hueBins,
+              avgR: totalR / totalPixels,
+              avgG: totalG / totalPixels,
+              avgB: totalB / totalPixels,
+              aspect
+            };
+
+            lensSignaturesCache.set(imgSrc, signature);
+            resolve(signature);
           } catch (e) {
             resolve(null);
           }
@@ -5497,32 +5566,64 @@
     }
 
     function compareImageSignatures(sig1, sig2) {
-      if (!sig1 || !sig2 || sig1.length !== sig2.length) return 0;
-      let sumSqDiff = 0;
-      const len = sig1.length - 1;
-      for (let i = 0; i < len; i++) {
-        const diff = sig1[i] - sig2[i];
-        sumSqDiff += diff * diff;
+      if (!sig1 || !sig2) return 0;
+
+      // 1. Spatial Color Distance (35% weight)
+      let colorDiffSum = 0;
+      const rgbLen = sig1.rgbGrid.length;
+      for (let i = 0; i < rgbLen; i++) {
+        const d = sig1.rgbGrid[i] - sig2.rgbGrid[i];
+        colorDiffSum += d * d;
       }
-      const maxDist = len * (255 * 255);
-      const distRatio = Math.sqrt(sumSqDiff / maxDist);
-      let similarity = Math.max(0, Math.min(100, Math.round((1 - distRatio * 1.85) * 100)));
-      
-      const aspect1 = sig1[sig1.length - 1];
-      const aspect2 = sig2[sig2.length - 1];
-      if (aspect1 && aspect2) {
-        const aspectDiff = Math.abs(aspect1 - aspect2) / Math.max(aspect1, aspect2);
-        if (aspectDiff > 0.45) similarity = Math.max(0, similarity - 15);
+      const maxColorDist = rgbLen * (255 * 255 * 2.2);
+      const colorSim = Math.max(0, 1 - Math.sqrt(colorDiffSum / maxColorDist));
+
+      // 2. Shape / Contour Edge Correlation (45% weight)
+      let edgeDiffSum = 0;
+      const edgeLen = sig1.edgeGrid.length;
+      for (let i = 0; i < edgeLen; i++) {
+        const d = sig1.edgeGrid[i] - sig2.edgeGrid[i];
+        edgeDiffSum += d * d;
       }
-      return similarity;
+      const maxEdgeDist = edgeLen * (280 * 280);
+      const edgeSim = Math.max(0, 1 - Math.sqrt(edgeDiffSum / maxEdgeDist));
+
+      // 3. Global Palette Hue Overlap (15% weight)
+      let hueSimilarity = 0;
+      for (let i = 0; i < 8; i++) {
+        hueSimilarity += Math.min(sig1.hueBins[i], sig2.hueBins[i]);
+      }
+
+      // 4. Aspect Ratio Penalty (5% weight)
+      let aspectSim = 1;
+      if (sig1.aspect && sig2.aspect) {
+        const aspectDiff = Math.abs(sig1.aspect - sig2.aspect) / Math.max(sig1.aspect, sig2.aspect);
+        aspectSim = Math.max(0, 1 - aspectDiff * 1.4);
+      }
+
+      // Weighted Composite Score
+      const totalScore = (edgeSim * 0.45) + (colorSim * 0.35) + (hueSimilarity * 0.15) + (aspectSim * 0.05);
+      let matchPercent = Math.round(totalScore * 100);
+
+      // Calibration mapping curve to reflect human visual expectation
+      if (matchPercent > 40) {
+        matchPercent = Math.min(99, Math.round(40 + (matchPercent - 40) * 1.45));
+      } else {
+        matchPercent = Math.round(matchPercent * 0.85);
+      }
+
+      return Math.max(0, Math.min(99, matchPercent));
     }
 
     async function runVisualLensSearch(fileOrSrc) {
       if (!fileOrSrc) return;
-      showToast('Analyzing photo signature for Lens Search...', 'info');
+      showToast('Analyzing photo features & contour signatures...', 'info');
 
       let dataUrl = fileOrSrc;
+      let rawFileName = '';
+
       if (fileOrSrc instanceof File || fileOrSrc instanceof Blob) {
+        if (fileOrSrc.name) rawFileName = fileOrSrc.name;
         dataUrl = await new Promise((resolve) => {
           const reader = new FileReader();
           reader.onload = e => resolve(e.target.result);
@@ -5532,7 +5633,7 @@
 
       const querySig = await getImageSignature(dataUrl);
       if (!querySig) {
-        showToast('Unable to analyze image for Lens search', 'error');
+        showToast('Unable to analyze photo features for Lens search', 'error');
         return;
       }
 
@@ -5540,25 +5641,40 @@
       const catalog = getCustomerCatalogProducts();
       let matchCount = 0;
 
-      for (const p of catalog) {
-        const firstCloudImg = p.image_urls && p.image_urls.length > 0 ? p.image_urls[0] : null;
-        const firstLocalImg = getFirstImage(p.productId);
-        const imgSrc = firstLocalImg || firstCloudImg;
+      // Extract filename keywords for optical assist
+      const cleanFileNameKeyword = rawFileName ? rawFileName.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ').replace(/[^a-zA-Z0-9\s]/g, '').trim().toLowerCase() : '';
 
-        if (imgSrc) {
-          const pSig = await getImageSignature(imgSrc);
-          if (pSig) {
-            p._lensMatch = compareImageSignatures(querySig, pSig);
-            if (p._lensMatch >= 25) matchCount++;
-          } else {
-            p._lensMatch = 0;
+      for (const p of catalog) {
+        const cloudImgs = p.image_urls && Array.isArray(p.image_urls) ? p.image_urls : [];
+        const localImgs = typeof getProductImages === 'function' ? (getProductImages(p.productId) || []) : [];
+        const firstLocal = getFirstImage(p.productId);
+        
+        const allProductImgs = Array.from(new Set([...cloudImgs, ...localImgs, firstLocal].filter(Boolean)));
+
+        let maxScore = 0;
+        if (allProductImgs.length > 0) {
+          for (const imgSrc of allProductImgs) {
+            const pSig = await getImageSignature(imgSrc);
+            if (pSig) {
+              const score = compareImageSignatures(querySig, pSig);
+              if (score > maxScore) maxScore = score;
+            }
           }
-        } else {
-          p._lensMatch = 0;
         }
+
+        // Apply keyword boost if filename text matches product details
+        if (cleanFileNameKeyword && cleanFileNameKeyword.length > 2) {
+          const blob = productSearchBlob(p);
+          if (fuzzyMatch(blob, cleanFileNameKeyword)) {
+            maxScore = Math.min(99, maxScore + 30);
+          }
+        }
+
+        p._lensMatch = maxScore;
+        if (maxScore >= 35) matchCount++;
       }
 
-      showToast(`Lens Search complete! Found ${matchCount} visually matching product${matchCount === 1 ? '' : 's'}`, 'success');
+      showToast(`Lens Search complete! Found ${matchCount} matching product${matchCount === 1 ? '' : 's'}`, 'success');
       stopScanner();
       window.location.hash = '#/products';
       renderAllProductsView(true);
