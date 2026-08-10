@@ -5326,6 +5326,23 @@
       return fuzzyMatch(blob, q);
     }
 
+    /** Check if product has an exact Product ID or Barcode match */
+    function isExactProductMatch(p, query) {
+      if (!p || !query) return false;
+      const q = String(query).toLowerCase().trim();
+      if (!q) return false;
+
+      const pId = String(p.productId || '').toLowerCase().trim();
+      const barcode = String(p.barcode || '').toLowerCase().trim();
+      const normQ = normalizeCode(q);
+
+      if (pId === q || barcode === q) return true;
+      if (normQ.length >= 1) {
+        if (normalizeCode(pId) === normQ || normalizeCode(barcode) === normQ) return true;
+      }
+      return false;
+    }
+
     /** Rank matches so part numbers and exact name hits float to the top */
     function scoreSearchMatch(p, query) {
       if (!query) return 0;
@@ -6591,7 +6608,6 @@
       allMasterFiltered = catalog.filter(p => {
         const stdCat = getStandardCategory(p.category, p.productName);
         const blob = productSearchBlob(p);
-        const matchSearch = !searchQuery || matchesProductSearch(p, searchQuery);
 
         const matchCat = !categoryFilter || stdCat === categoryFilter || p.category === categoryFilter;
         const effectiveBrand = brandFilter || activeBrandChip;
@@ -6599,8 +6615,17 @@
         const matchVehicle = !vehicleFilter || (p.fit || '').toLowerCase().includes(vehicleFilter.toLowerCase());
         const matchVehicleChip = !activeVehicleChip || blob.includes(activeVehicleChip.toLowerCase());
 
-        return matchSearch && matchCat && matchBrand && matchVehicle && matchVehicleChip;
+        return matchCat && matchBrand && matchVehicle && matchVehicleChip;
       });
+
+      if (searchQuery) {
+        const exactMatches = allMasterFiltered.filter(p => isExactProductMatch(p, searchQuery));
+        if (exactMatches.length > 0) {
+          allMasterFiltered = exactMatches;
+        } else {
+          allMasterFiltered = allMasterFiltered.filter(p => matchesProductSearch(p, searchQuery));
+        }
+      }
 
       // Sorting
       allMasterFiltered.sort((a, b) => {
@@ -7896,17 +7921,23 @@
         populateCategoryFilter('adminCategoryFilter', category);
       }
 
-      const filtered = products.filter(p => {
+      let filtered = products.filter(p => {
         const stdCat = getStandardCategory(p.category, p.productName);
         const matchCat = !category || p.category === category || stdCat === category;
         if (!matchCat) return false;
         if (noImageOnly && imageIds.has(String(p.productId))) return false;
         if (adminLowStockFilterActive && !isLowStock(p)) return false;
-        if (!search) return true;
-        return matchesProductSearch(p, search);
+        return true;
       });
 
       if (search) {
+        // If query matches an exact Product ID or Barcode, filter strictly to exact ID match(es)
+        const exactMatches = filtered.filter(p => isExactProductMatch(p, search));
+        if (exactMatches.length > 0) {
+          filtered = exactMatches;
+        } else {
+          filtered = filtered.filter(p => matchesProductSearch(p, search));
+        }
         filtered.sort((a, b) => scoreSearchMatch(b, search) - scoreSearchMatch(a, search));
       }
 
