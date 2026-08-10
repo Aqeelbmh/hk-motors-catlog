@@ -6938,61 +6938,6 @@
         const existing = grid.querySelector('.product-grid');
         if (existing) existing.insertAdjacentHTML('beforeend', cardsHtml);
         else grid.innerHTML = `<div class="product-grid">${cardsHtml}</div>`;
-          return (a.productName || '').localeCompare(b.productName || '');
-        }
-        if (sortVal === 'name_asc') return (a.productName || '').localeCompare(b.productName || '');
-        if (sortVal === 'name_desc') return (b.productName || '').localeCompare(a.productName || '');
-        if (sortVal === 'brand_asc') return (a.brand || '').localeCompare(b.brand || '');
-        if (sortVal === 'category_asc') return (getStandardCategory(a.category, a.productName)).localeCompare(getStandardCategory(b.category, b.productName));
-        if (sortVal === 'part_asc') return (a.barcode || a.productId || '').localeCompare(b.barcode || b.productId || '');
-        if (sortVal === 'price_asc') return parseFloat(a.retailPrice || 0) - parseFloat(b.retailPrice || 0);
-        if (sortVal === 'price_desc') return parseFloat(b.retailPrice || 0) - parseFloat(a.retailPrice || 0);
-        return 0;
-      });
-
-      const filterBits = [];
-      if (searchQuery) filterBits.push(`“${esc(searchQuery)}”`);
-      if (activeVehicleChip) filterBits.push(esc(activeVehicleChip));
-      document.getElementById('masterResultsCount').innerHTML =
-        `<strong>${allMasterFiltered.length}</strong> product${allMasterFiltered.length === 1 ? '' : 's'} found` +
-        (filterBits.length ? ` for ${filterBits.join(' · ')}` : '');
-
-      syncQuickChipUI();
-
-      if (resetPagination) {
-        currentMasterPage = 1;
-      }
-
-      renderMasterPage(resetPagination);
-    }
-
-    function renderMasterPage(isFirst) {
-      const grid = document.getElementById('masterProductGrid');
-      const loadMoreBtn = document.getElementById('masterLoadMoreBtn');
-      
-      const startIndex = (currentMasterPage - 1) * MASTER_PAGE_SIZE;
-      const endIndex = startIndex + MASTER_PAGE_SIZE;
-      const pageList = allMasterFiltered.slice(startIndex, endIndex);
-
-      if (isFirst && allMasterFiltered.length === 0) {
-        grid.innerHTML = `
-          <div class="product-grid">
-            <div class="catalog-empty-state">
-              <h3>No products found</h3>
-              <p>Try a different part number, brand, or vehicle — or reset filters.</p>
-            </div>
-          </div>`;
-        loadMoreBtn.style.display = 'none';
-        return;
-      }
-
-      const cardsHtml = pageList.map(renderProductCard).join('');
-      if (isFirst) {
-        grid.innerHTML = `<div class="product-grid">${cardsHtml}</div>`;
-      } else {
-        const existing = grid.querySelector('.product-grid');
-        if (existing) existing.insertAdjacentHTML('beforeend', cardsHtml);
-        else grid.innerHTML = `<div class="product-grid">${cardsHtml}</div>`;
       }
 
       loadCardImages(pageList);
