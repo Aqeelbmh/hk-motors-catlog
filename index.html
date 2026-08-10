@@ -2245,23 +2245,23 @@
 
     .hero-search-wrap {
       width: 100%;
-      max-width: 640px;
+      max-width: 660px;
       background: var(--hero-search-bg);
-      border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 18px;
-      padding: 0.4rem 0.4rem 0.4rem 1rem;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 20px;
+      padding: 0.45rem 0.45rem 0.45rem 1.1rem;
       display: flex;
       align-items: center;
-      gap: 0.45rem;
-      box-shadow: 0 18px 40px rgba(0,0,0,0.28);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+      gap: 0.5rem;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.32), 0 0 0 1px rgba(255,255,255,0.05);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .hero-search-wrap:focus-within {
-      border-color: rgba(255,255,255,0.35);
-      box-shadow: 0 0 0 4px rgba(225, 29, 46, 0.2), 0 18px 40px rgba(0,0,0,0.28);
+      border-color: var(--accent, #e11d2e);
+      box-shadow: 0 0 0 4px rgba(225, 29, 46, 0.25), 0 22px 50px rgba(0,0,0,0.35);
     }
 
     .hero-search-input {
@@ -2270,7 +2270,8 @@
       background: transparent;
       border: none;
       color: var(--text);
-      font-size: 0.98rem;
+      font-size: 1rem;
+      font-weight: 500;
       outline: none;
       font-family: inherit;
     }
@@ -2279,14 +2280,61 @@
 
     .hero-search-input::placeholder {
       color: var(--text-muted);
+      font-size: 0.92rem;
     }
 
     .btn-search {
       border-radius: 14px;
-      padding: 0.7rem 1.25rem;
+      padding: 0.7rem 1.35rem;
       font-weight: 700;
       min-height: 44px;
       flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(225, 29, 46, 0.35);
+    }
+
+    /* Ultra-Professional Search Bar & Scan/Photo Button Styling */
+    .scan-img-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      background: var(--surface-panel, rgba(255, 255, 255, 0.08));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.5rem 0.8rem;
+      cursor: pointer;
+      font-size: 1.05rem;
+      color: var(--text-main);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .scan-img-btn:hover {
+      background: var(--accent-dim, rgba(225, 29, 46, 0.14));
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-1px) scale(1.02);
+      box-shadow: 0 4px 14px rgba(225, 29, 46, 0.25);
+    }
+    .scan-img-btn:active {
+      transform: scale(0.97);
+    }
+    .scan-img-btn .btn-label-desktop {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .scan-img-icons {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      font-size: 1.05rem;
+    }
+    @media (max-width: 600px) {
+      .scan-img-btn .btn-label-desktop {
+        display: none;
+      }
     }
 
     .hero-actions {
@@ -4471,9 +4519,12 @@
         <h2 class="hero-title">HK Motors</h2>
         <p class="hero-tagline" data-i18n="heroTagline">Your Trusted Spare Parts Partner</p>
         <div class="hero-search-wrap">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="search" class="hero-search-input" id="heroSearchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search by name, part number, vehicle model, or brand..." autocomplete="off">
-          <button class="btn btn-ghost scan-btn" id="heroScanBtn" type="button" title="Scan Barcode" aria-label="Scan barcode">📷</button>
+          <svg class="search-lead-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true" style="color: var(--text-muted); flex-shrink: 0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="search" class="hero-search-input" id="heroSearchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Type part number, name, brand, or vehicle model..." autocomplete="off">
+          <button class="scan-img-btn" id="heroScanBtn" type="button" title="Search by Photo or Scan Barcode" aria-label="Scan barcode or search by image">
+            <span class="scan-img-icons">📷 🖼️</span>
+            <span class="btn-label-desktop">Scan / Photo</span>
+          </button>
           <button class="btn btn-accent btn-search" id="heroSearchBtn" type="button">Search</button>
         </div>
         <div class="quick-chip-row hero-chip-row" id="heroVehicleChips" aria-label="Quick vehicle filters">
@@ -4609,10 +4660,13 @@
         <div class="catalog-search-panel">
           <div class="catalog-search-bar">
             <div class="search-wrap">
-              <svg class="search-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-              <input type="search" class="search-input" id="masterSearch" placeholder="Search name, part number, brand, or vehicle..." autocomplete="off" enterkeyhint="search">
+              <svg class="search-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="search" class="search-input" id="masterSearch" placeholder="Type part number, name, brand, or vehicle model..." autocomplete="off" enterkeyhint="search">
             </div>
-            <button type="button" class="catalog-scan-btn" id="masterScanBtn" title="Scan Barcode" aria-label="Scan barcode">📷</button>
+            <button type="button" class="scan-img-btn" id="masterScanBtn" title="Search by Photo or Scan Barcode" aria-label="Scan barcode or search by image">
+              <span class="scan-img-icons">📷 🖼️</span>
+              <span class="btn-label-desktop">Scan / Photo</span>
+            </button>
           </div>
           <div class="catalog-toolbar-actions">
             <label class="visually-hidden" for="masterSortFilter">Sort By</label>
@@ -4822,10 +4876,13 @@
     <div class="admin-toolbar-v2">
       <!-- Top Tier: Search & Filters -->
       <div class="toolbar-section filters-section">
-        <div class="search-wrap" style="flex: 2; min-width: 260px; display: flex; align-items: center; position: relative;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 1rem;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="search" class="search-input" id="adminSearch" placeholder="Search product ID, name, brand, vehicle compatibility..." style="padding-right: 2.75rem;">
-          <button class="btn btn-ghost scan-btn" id="adminScanBtn" style="position: absolute; right: 0.5rem; border: none; background: transparent; cursor: pointer; font-size: 1.1rem; padding: 0.25rem;" title="Scan Barcode">📷</button>
+        <div class="search-wrap admin-search-wrap" style="flex: 2; min-width: 260px; display: flex; align-items: center; position: relative;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="position: absolute; left: 1rem; color: var(--text-muted);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="search" class="search-input" id="adminSearch" placeholder="Type product ID, barcode, name, brand, or vehicle..." style="padding-left: 2.5rem !important; padding-right: 8.5rem !important;">
+          <button class="scan-img-btn" id="adminScanBtn" style="position: absolute; right: 0.35rem; padding: 0.35rem 0.65rem;" title="Search by Photo or Scan Barcode" aria-label="Scan barcode or search by image">
+            <span class="scan-img-icons">📷 🖼️</span>
+            <span class="btn-label-desktop">Scan / Photo</span>
+          </button>
         </div>
         
         <select class="filter-select" id="adminCategoryFilter" style="flex: 1; min-width: 160px; max-width: 220px;">
@@ -5030,7 +5087,7 @@
     </div>
   </div>
 
-  <!-- Barcode Scanner & Manual Search Modal -->
+  <!-- Barcode Scanner, Photo Search & Manual Search Modal -->
   <div class="modal-overlay" id="scannerModal">
     <div class="modal" style="max-width: 480px; padding: 1.25rem 1.5rem; border-radius: 18px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -5040,13 +5097,16 @@
         <button class="btn btn-ghost btn-sm" id="closeScannerBtn" style="border-radius: 50%; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;" aria-label="Close modal">✕</button>
       </div>
 
-      <!-- Mode Switcher Tabs (Camera vs Typing) -->
+      <!-- Mode Switcher Tabs (Camera, Photo Search, Typing) -->
       <div style="display: flex; background: var(--bg-alt, rgba(255,255,255,0.06)); padding: 0.25rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border); gap: 0.25rem;">
-        <button type="button" id="scannerModeCameraTab" class="btn btn-sm" style="flex: 1; border-radius: 9px; font-weight: 700; padding: 0.5rem; background: var(--surface-panel); color: var(--text-main); border: 1px solid var(--border); transition: all 0.2s ease;">
+        <button type="button" id="scannerModeCameraTab" class="btn btn-sm" style="flex: 1; border-radius: 9px; font-weight: 700; padding: 0.45rem 0.3rem; font-size: 0.8rem; background: var(--surface-panel); color: var(--text-main); border: 1px solid var(--border); transition: all 0.2s ease;">
           📷 Camera Scan
         </button>
-        <button type="button" id="scannerModeTypeTab" class="btn btn-sm btn-ghost" style="flex: 1; border-radius: 9px; font-weight: 700; padding: 0.5rem; color: var(--text-muted); transition: all 0.2s ease;">
-          ⌨️ Type Search
+        <button type="button" id="scannerModeImageTab" class="btn btn-sm btn-ghost" style="flex: 1; border-radius: 9px; font-weight: 700; padding: 0.45rem 0.3rem; font-size: 0.8rem; color: var(--text-muted); transition: all 0.2s ease;">
+          🖼️ Photo Search
+        </button>
+        <button type="button" id="scannerModeTypeTab" class="btn btn-sm btn-ghost" style="flex: 1; border-radius: 9px; font-weight: 700; padding: 0.45rem 0.3rem; font-size: 0.8rem; color: var(--text-muted); transition: all 0.2s ease;">
+          ⌨️ Type Code
         </button>
       </div>
 
@@ -5059,6 +5119,23 @@
           <select id="scannerCameraSelect" class="filter-select" style="max-width: 260px; font-size: 0.82rem; padding: 0.5rem 2rem 0.5rem 1rem;"></select>
         </div>
         <p style="text-align: center; color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 0;">Align the barcode within the camera viewfinder to scan.</p>
+      </div>
+
+      <!-- Photo / Image Search Section -->
+      <div id="scannerImageSection" style="display: none; background: var(--surface); padding: 1rem; border-radius: 14px; border: 1px solid var(--border); text-align: center;">
+        <div id="scannerImageDropzone" style="border: 2px dashed var(--border); padding: 1.5rem 1rem; border-radius: 12px; cursor: pointer; background: var(--bg-alt, rgba(255,255,255,0.02)); transition: all 0.2s;">
+          <span style="font-size: 2.2rem; display: block; margin-bottom: 0.3rem;">🖼️</span>
+          <strong style="display: block; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.25rem;">Upload Spare Part Photo</strong>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Select or drop an image file to scan code or search by photo</span>
+          <input type="file" id="scannerImageFileInput" accept="image/*" style="display: none;">
+        </div>
+        <div id="scannerImagePreviewWrap" style="display: none; margin-top: 0.85rem;">
+          <img id="scannerImagePreview" style="max-width: 100%; max-height: 160px; border-radius: 10px; border: 1px solid var(--border); object-fit: contain; margin-bottom: 0.75rem;" alt="Spare Part Photo">
+          <div style="display: flex; gap: 0.5rem; justify-content: center;">
+            <button type="button" class="btn btn-accent btn-sm" id="scannerImageAnalyzeBtn" style="border-radius: 8px; padding: 0.55rem 1.1rem; font-weight: 700;">Search Product 🔍</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="scannerImageResetBtn" style="border-radius: 8px; padding: 0.55rem 0.85rem;">Change Photo</button>
+          </div>
+        </div>
       </div>
 
       <!-- Manual Typing Section -->
@@ -8343,49 +8420,131 @@
       showToast('Product deleted successfully', 'success');
     }
 
-    // ── Barcode & QR Code Camera Scanner & Manual Search ──
+    // ── Barcode & QR Code Camera Scanner & Image Search & Manual Search ──
     let html5QrCode = null;
     let scannerActiveInputId = null;
+    let selectedSearchImageFile = null;
 
     function setScannerTab(mode) {
       const cameraTab = document.getElementById('scannerModeCameraTab');
+      const imageTab = document.getElementById('scannerModeImageTab');
       const typeTab = document.getElementById('scannerModeTypeTab');
       const cameraSec = document.getElementById('scannerCameraSection');
+      const imageSec = document.getElementById('scannerImageSection');
       const manualSec = document.getElementById('scannerManualSection');
       
       if (!cameraTab || !typeTab || !cameraSec || !manualSec) return;
 
-      if (mode === 'type') {
-        cameraTab.classList.add('btn-ghost');
-        cameraTab.style.background = 'transparent';
-        cameraTab.style.color = 'var(--text-muted)';
-        cameraTab.style.border = 'none';
+      // Reset all tab styling
+      [cameraTab, imageTab, typeTab].filter(Boolean).forEach(tab => {
+        tab.classList.add('btn-ghost');
+        tab.style.background = 'transparent';
+        tab.style.color = 'var(--text-muted)';
+        tab.style.border = 'none';
+      });
 
+      // Hide all sections
+      cameraSec.style.display = 'none';
+      if (imageSec) imageSec.style.display = 'none';
+      manualSec.style.display = 'none';
+
+      if (mode === 'type') {
         typeTab.classList.remove('btn-ghost');
         typeTab.style.background = 'var(--surface-panel)';
         typeTab.style.color = 'var(--text-main)';
         typeTab.style.border = '1px solid var(--border)';
-
-        cameraSec.style.display = 'none';
         manualSec.style.display = 'block';
 
         const inputEl = document.getElementById('scannerManualInput');
         if (inputEl) {
           setTimeout(() => inputEl.focus(), 100);
         }
+      } else if (mode === 'image') {
+        if (imageTab) {
+          imageTab.classList.remove('btn-ghost');
+          imageTab.style.background = 'var(--surface-panel)';
+          imageTab.style.color = 'var(--text-main)';
+          imageTab.style.border = '1px solid var(--border)';
+        }
+        if (imageSec) imageSec.style.display = 'block';
       } else {
-        typeTab.classList.add('btn-ghost');
-        typeTab.style.background = 'transparent';
-        typeTab.style.color = 'var(--text-muted)';
-        typeTab.style.border = 'none';
-
         cameraTab.classList.remove('btn-ghost');
         cameraTab.style.background = 'var(--surface-panel)';
         cameraTab.style.color = 'var(--text-main)';
         cameraTab.style.border = '1px solid var(--border)';
-
-        manualSec.style.display = 'none';
         cameraSec.style.display = 'block';
+      }
+    }
+
+    async function processSearchImage(file) {
+      if (!file) return;
+      selectedSearchImageFile = file;
+
+      const preview = document.getElementById('scannerImagePreview');
+      const previewWrap = document.getElementById('scannerImagePreviewWrap');
+      const dropzone = document.getElementById('scannerImageDropzone');
+
+      if (preview && previewWrap && dropzone) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          preview.src = e.target.result;
+          previewWrap.style.display = 'block';
+          dropzone.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // Try scanning barcode from image file using Html5Qrcode
+      if (typeof Html5Qrcode !== 'undefined') {
+        try {
+          const html5QrCodeFile = new Html5Qrcode("scannerReader");
+          const decoded = await html5QrCodeFile.scanFileV2(file, true);
+          if (decoded && decoded.decodedText) {
+            const code = decoded.decodedText.trim();
+            showToast(`Barcode detected in photo: ${code}`, 'success');
+            const targetId = scannerActiveInputId || 'adminSearch';
+            const input = document.getElementById(targetId);
+            if (input) {
+              input.value = code;
+              input.dispatchEvent(new Event('input', { bubbles: true }));
+              input.dispatchEvent(new Event('change', { bubbles: true }));
+              if (targetId === 'heroSearchInput') {
+                const heroBtn = document.getElementById('heroSearchBtn');
+                if (heroBtn) heroBtn.click();
+              } else if (targetId === 'masterSearch') {
+                renderAllProductsView(true);
+              } else if (targetId === 'adminSearch') {
+                renderAdminTable();
+              }
+            }
+            stopScanner();
+            return;
+          }
+        } catch (e) {
+          console.log('[ImageSearch] Barcode scan from file optional attempt:', e);
+        }
+      }
+
+      // Fallback: Use image file name keywords
+      const rawName = file.name ? file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ') : '';
+      const cleanName = rawName.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+      
+      const targetId = scannerActiveInputId || 'adminSearch';
+      const input = document.getElementById(targetId);
+      if (input && cleanName && cleanName.length > 1) {
+        input.value = cleanName;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        if (targetId === 'heroSearchInput') {
+          const heroBtn = document.getElementById('heroSearchBtn');
+          if (heroBtn) heroBtn.click();
+        } else if (targetId === 'masterSearch') {
+          renderAllProductsView(true);
+        } else if (targetId === 'adminSearch') {
+          renderAdminTable();
+        }
+        showToast(`Searching for "${cleanName}" from photo`, 'info');
+        stopScanner();
       }
     }
 
@@ -9292,13 +9451,15 @@
         if (e.target.id === 'scannerModal') stopScanner();
       });
 
-      // Scanner Modal Dual Mode (Camera Tab / Type Tab & Manual Submit)
+      // Scanner Modal Mode Tabs (Camera Tab / Image Tab / Type Tab & Submit)
       const cameraTabBtn = document.getElementById('scannerModeCameraTab');
+      const imageTabBtn = document.getElementById('scannerModeImageTab');
       const typeTabBtn = document.getElementById('scannerModeTypeTab');
       const manualSubmitBtn = document.getElementById('scannerManualSubmitBtn');
       const manualInputEl = document.getElementById('scannerManualInput');
 
       if (cameraTabBtn) cameraTabBtn.addEventListener('click', () => setScannerTab('camera'));
+      if (imageTabBtn) imageTabBtn.addEventListener('click', () => setScannerTab('image'));
       if (typeTabBtn) typeTabBtn.addEventListener('click', () => setScannerTab('type'));
       if (manualSubmitBtn) manualSubmitBtn.addEventListener('click', submitScannerManualInput);
       if (manualInputEl) {
@@ -9307,6 +9468,40 @@
             e.preventDefault();
             submitScannerManualInput();
           }
+        });
+      }
+
+      // Photo Search Event Listeners
+      const dropzone = document.getElementById('scannerImageDropzone');
+      const fileInput = document.getElementById('scannerImageFileInput');
+      const analyzeBtn = document.getElementById('scannerImageAnalyzeBtn');
+      const resetBtn = document.getElementById('scannerImageResetBtn');
+
+      if (dropzone && fileInput) {
+        dropzone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => {
+          if (e.target.files && e.target.files[0]) {
+            processSearchImage(e.target.files[0]);
+          }
+        });
+      }
+      if (analyzeBtn && fileInput) {
+        analyzeBtn.addEventListener('click', () => {
+          if (selectedSearchImageFile) {
+            processSearchImage(selectedSearchImageFile);
+          } else if (fileInput.files && fileInput.files[0]) {
+            processSearchImage(fileInput.files[0]);
+          }
+        });
+      }
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          selectedSearchImageFile = null;
+          if (fileInput) fileInput.value = '';
+          const previewWrap = document.getElementById('scannerImagePreviewWrap');
+          const dropzoneEl = document.getElementById('scannerImageDropzone');
+          if (previewWrap) previewWrap.style.display = 'none';
+          if (dropzoneEl) dropzoneEl.style.display = 'block';
         });
       }
 
