@@ -57,6 +57,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=Noto+Sans+Sinhala:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Fuse.js Fuzzy Search Library -->
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
   <!-- SheetJS Excel Library -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- HTML5 QR Code Barcode Library -->
@@ -434,7 +436,7 @@
     }
 
     @media (min-width: 640px) {
-      .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+      .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.1rem; }
     }
 
     @media (min-width: 768px) {
@@ -444,8 +446,8 @@
     }
 
     @media (min-width: 1100px) {
-      .product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.25rem; }
-      .catalog-main { max-width: 1400px; margin: 0 auto; }
+      .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.35rem; }
+      .catalog-main { max-width: 1200px; margin: 0 auto; }
     }
 
     /* ── Category Section ── */
@@ -483,12 +485,13 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1rem;
+      padding: 0;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0;
       min-width: 0;
       height: 100%;
+      overflow: hidden;
       transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
       box-shadow: var(--shadow);
       cursor: pointer;
@@ -498,6 +501,15 @@
       border-color: var(--accent);
       transform: translateY(-4px);
       box-shadow: 0 14px 28px var(--accent-dim), var(--shadow);
+    }
+
+    .product-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      padding: 0.85rem 0.95rem 1rem;
+      flex: 1;
+      min-width: 0;
     }
 
     /* Keep out-of-stock cards fully visible — same look as in-stock */
@@ -3359,7 +3371,7 @@
       width: 100%;
     }
 
-    /* Master catalog product grid — fluid 2 / 3 / 4 columns */
+    /* Master catalog product grid — 2 on phones, 3 columns from tablet up */
     .master-catalog-main .product-grid,
     #masterProductGrid .product-grid {
       display: grid !important;
@@ -3372,31 +3384,33 @@
       .master-catalog-main .product-grid,
       #masterProductGrid .product-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-        gap: 1rem !important;
+        gap: 1.15rem !important;
       }
     }
 
     @media (min-width: 1100px) {
       .master-catalog-main .product-grid,
       #masterProductGrid .product-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-        gap: 1.25rem !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 1.35rem !important;
       }
     }
 
-    /* Compact cards in All Products — same visual language, denser spacing only */
+    /* Catalog cards — image flush to top edge */
     #masterProductGrid .product-card {
-      padding: 0.9rem;
-      gap: 0.45rem;
+      padding: 0;
+      gap: 0;
     }
 
     #masterProductGrid .product-image-wrap {
-      height: 175px;
+      height: auto;
+      aspect-ratio: 1 / 1;
     }
 
     @media (max-width: 480px) {
       #masterProductGrid .product-image-wrap {
-        height: 140px;
+        height: auto;
+        aspect-ratio: 1 / 1;
       }
     }
 
@@ -3477,10 +3491,14 @@
         padding: 0.65rem;
       }
       #masterProductGrid .product-image-wrap {
-        height: 140px;
+        height: auto;
+        aspect-ratio: 1 / 1;
       }
       #masterProductGrid .product-card {
-        padding: 0.7rem;
+        padding: 0;
+      }
+      #masterProductGrid .product-card-body {
+        padding: 0.7rem 0.75rem 0.85rem;
       }
     }
 
@@ -3839,16 +3857,32 @@
       max-width: 100%;
       height: auto;
     }
+    html.is-mobile-nav .product-image-wrap img,
+    html.is-mobile-nav .details-main-image img,
+    html.is-mobile-nav .details-thumb-wrap img,
+    html.is-mobile-nav .cart-item-thumb {
+      height: 100%;
+      max-width: none;
+      width: 100%;
+      object-fit: cover;
+    }
     html.is-mobile-nav .product-grid,
     html.is-mobile-nav #masterProductGrid .product-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
       gap: 0.75rem !important;
       width: 100% !important;
     }
+    @media (min-width: 640px) {
+      html.is-mobile-nav .product-grid,
+      html.is-mobile-nav #masterProductGrid .product-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 1rem !important;
+      }
+    }
     @media (max-width: 380px) {
       html.is-mobile-nav .product-grid,
       html.is-mobile-nav #masterProductGrid .product-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
       }
     }
 
@@ -3957,11 +3991,13 @@
     /* Product Card Image Consistency Styles */
     .product-image-wrap {
       width: 100%;
-      height: 190px;
-      border-radius: 14px;
+      aspect-ratio: 1 / 1;
+      height: auto;
+      border-radius: 0;
       overflow: hidden;
       background: var(--image-placeholder-bg);
-      border: 1px solid var(--border);
+      border: none;
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -3973,13 +4009,15 @@
     .product-image-wrap img {
       width: 100%;
       height: 100%;
-      object-fit: contain;
-      padding: 0.55rem;
-      transition: transform 0.3s ease;
+      object-fit: cover;
+      object-position: center;
+      padding: 0;
+      display: block;
+      transition: transform 0.35s ease;
     }
     
     .product-card:hover .product-image-wrap img {
-      transform: scale(1.04);
+      transform: scale(1.05);
     }
 
     .product-card:hover .product-image-wrap {
@@ -4130,6 +4168,77 @@
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
+
+    /* ── Search Autocomplete Suggestions ── */
+    .search-suggestions-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04);
+      z-index: 999;
+      overflow: hidden;
+      display: none;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .search-suggestions-dropdown.visible { display: block; animation: suggDropIn 0.18s ease; }
+    @keyframes suggDropIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .sugg-item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      transition: background 0.12s;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    .sugg-item:last-child { border-bottom: none; }
+    .sugg-item:hover, .sugg-item.active { background: var(--bg-elevated); }
+    .sugg-item-icon { font-size: 1rem; flex-shrink: 0; }
+    .sugg-item-body { flex: 1; min-width: 0; }
+    .sugg-item-name {
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sugg-item-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sugg-item-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.15rem 0.45rem;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .sugg-section-header {
+      padding: 0.3rem 1rem 0.2rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: var(--bg-alt);
+      border-bottom: 1px solid var(--border);
+    }
+    /* Fuzzy-match highlight */
+    .sugg-hl { color: var(--accent); font-weight: 700; }
 
     /* Horizontal Category Carousel */
     .horizontal-category-carousel-wrap {
@@ -4830,9 +4939,10 @@
       <div class="catalog-toolbar" id="catalogToolbar">
         <div class="catalog-search-panel">
           <div class="catalog-search-bar">
-            <div class="search-wrap">
+            <div class="search-wrap" style="position: relative;">
               <svg class="search-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               <input type="search" class="search-input" id="masterSearch" placeholder="Type part number, name, brand, or vehicle model..." autocomplete="off" enterkeyhint="search">
+              <div id="masterSearchSuggestions" class="search-suggestions-dropdown" role="listbox" aria-label="Search suggestions"></div>
             </div>
             <button type="button" class="scan-img-btn" id="masterScanBtn" title="Search by Photo or Scan Barcode" aria-label="Scan barcode or search by image">
               <span class="scan-img-icons">📷 🖼️</span>
@@ -5036,11 +5146,14 @@
       </div>
     </div>
 
-    <!-- Analytics Chart Container -->
-    <div class="admin-analytics-card">
-      <h3>📊 Inventory Breakdown (by Category)</h3>
-      <div id="analyticsChartWrapper" class="admin-analytics-chart">
-        <!-- Filled dynamically with inline SVG bars -->
+    <!-- Analytics Chart Container (collapsible) -->
+    <div class="admin-analytics-card" id="adminAnalyticsCard">
+      <div style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" id="analyticsToggleHeader" title="Toggle analytics panel">
+        <h3 style="margin:0;">📊 Inventory Breakdown (by Category)</h3>
+        <button type="button" id="analyticsToggleBtn" class="btn btn-ghost btn-sm" style="padding:0.2rem 0.6rem; border-radius:8px; font-size:0.8rem;" aria-expanded="true" aria-controls="analyticsChartWrapper">▲ Hide</button>
+      </div>
+      <div id="analyticsChartWrapper" class="admin-analytics-chart" style="margin-top:0.75rem;">
+        <!-- Filled dynamically with inline bar chart -->
       </div>
     </div>
 
@@ -5089,6 +5202,7 @@
         <button class="btn btn-ghost btn-sm" id="cloudSyncBtn" style="border-radius: 8px; padding: 0.55rem 1rem;">🔄 Sync Now</button>
         <button class="btn btn-ghost btn-sm" id="migrateImagesBtn" style="border-radius: 8px; padding: 0.55rem 1rem;" title="Upload all IndexedDB images to Supabase Storage and update URLs.">☁️ Migrate Images to Cloud</button>
         <button class="btn btn-ghost btn-sm" id="orderHistoryBtn" style="border-radius: 8px; padding: 0.55rem 1rem;">📋 Orders</button>
+        <button class="btn btn-ghost btn-sm" id="printBinLabelsBtn" style="border-radius: 8px; padding: 0.55rem 1rem;" title="Print warehouse shelf bin tags with QR codes & part numbers">🏷️ Print Bin Labels</button>
 
         <div style="flex-grow: 1;"></div>
 
@@ -5428,7 +5542,7 @@
     // ═══════════════════════════════════════════════════════════════
     // DEFAULT PRODUCT DATA — PSHOP export 2026-06-22 (3114 products)
     // ═══════════════════════════════════════════════════════════════
-    const DATA_VERSION = '20260701-pshop-zeroed';
+    const DATA_VERSION = '20260926-new-products-3124-3368';
     const VERSION_KEY = 'hkmotors_data_version';
     const PRODUCTS_URL = 'products.json';
 
@@ -5528,6 +5642,258 @@
     let activeVehicleChip = '';
     let activeBrandChip = '';
 
+    // ═══════════════════════════════════════════════════════════════
+    // PHASE 3: OFFLINE OUTBOX SYNC QUEUE & HELPERS
+    // ═══════════════════════════════════════════════════════════════
+    const OUTBOX_KEY = 'hkmotors_outbox';
+    const CUSTOMER_ORDERS_KEY = 'hkmotors_customer_orders';
+
+    function getOutbox() {
+      try { return JSON.parse(localStorage.getItem(OUTBOX_KEY) || '[]'); }
+      catch (e) { return []; }
+    }
+
+    function saveOutbox(queue) {
+      try {
+        localStorage.setItem(OUTBOX_KEY, JSON.stringify(queue));
+        updateOutboxPill();
+      } catch (e) {}
+    }
+
+    function queueOfflineAction(action, payload) {
+      const queue = getOutbox();
+      queue.push({
+        id: 'outbox_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        action,
+        payload,
+        timestamp: new Date().toISOString()
+      });
+      saveOutbox(queue);
+      showToast(`Saved offline (${queue.length} pending syncs)`, 'info');
+    }
+
+    async function processOutboxQueue() {
+      if (!isCloudSyncActive || !navigator.onLine) return;
+      const queue = getOutbox();
+      if (queue.length === 0) {
+        updateOutboxPill();
+        return;
+      }
+      console.log(`[Outbox] Processing ${queue.length} queued offline actions...`);
+      const remaining = [];
+      let successCount = 0;
+
+      for (const item of queue) {
+        try {
+          if (item.action === 'upsert_product') {
+            const dbRow = mapLocalToSupabase(item.payload);
+            const { error } = await supabase.from('products').upsert(dbRow, { onConflict: 'product_id' });
+            if (error) throw error;
+            successCount++;
+          } else if (item.action === 'delete_product') {
+            const { error } = await supabase.from('products').delete().eq('product_id', String(item.payload.productId));
+            if (error) throw error;
+            successCount++;
+          }
+        } catch (err) {
+          console.warn('[Outbox] Failed sync for item, holding in outbox:', item, err);
+          remaining.push(item);
+        }
+      }
+
+      saveOutbox(remaining);
+      if (successCount > 0) {
+        showToast(`☁️ Cloud Auto-Sync: ${successCount} offline update${successCount === 1 ? '' : 's'} synced!`, 'success');
+      }
+    }
+
+    function updateOutboxPill() {
+      const queue = getOutbox();
+      let pill = document.getElementById('outboxStatusPill');
+      if (!pill) {
+        pill = document.createElement('div');
+        pill.id = 'outboxStatusPill';
+        pill.style.cssText = 'position: fixed; bottom: 1.25rem; left: 1.25rem; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main); padding: 0.4rem 0.85rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700; display: none; z-index: 450; box-shadow: var(--shadow); align-items: center; gap: 0.4rem; cursor: pointer;';
+        pill.onclick = () => {
+          if (queue.length > 0 && navigator.onLine) processOutboxQueue();
+        };
+        document.body.appendChild(pill);
+      }
+      if (queue.length > 0) {
+        pill.style.display = 'flex';
+        pill.innerHTML = `☁️ Pending Syncs: <strong>${queue.length}</strong> ${navigator.onLine ? '(Tap to Sync)' : '(Offline)'}`;
+      } else {
+        pill.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('online', () => {
+      processOutboxQueue();
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // PHASE 3: SKELETON SCREEN LOADER GENERATOR
+    // ═══════════════════════════════════════════════════════════════
+    function renderSkeletonGrid(containerId, count = 8) {
+      const el = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
+      if (!el) return;
+      let html = '<div class="product-grid" aria-busy="true" aria-label="Loading catalog content">';
+      for (let i = 0; i < count; i++) {
+        html += `
+          <div class="product-card" style="pointer-events: none; opacity: 0.85;">
+            <div class="skeleton" style="width: 100%; aspect-ratio: 1 / 1; border-radius: 12px; margin-bottom: 0.75rem;"></div>
+            <div class="skeleton" style="width: 35%; height: 12px; margin-bottom: 0.5rem;"></div>
+            <div class="skeleton" style="width: 85%; height: 16px; margin-bottom: 0.5rem;"></div>
+            <div class="skeleton" style="width: 55%; height: 12px; margin-bottom: 0.75rem;"></div>
+            <div class="skeleton" style="width: 100%; height: 38px; border-radius: 10px;"></div>
+          </div>`;
+      }
+      html += '</div>';
+      el.innerHTML = html;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PHASE 3: WAREHOUSE PRINTABLE QR/BARCODE BIN LABELS GENERATOR
+    // ═══════════════════════════════════════════════════════════════
+    function printBinLabels() {
+      const list = (typeof getAdminFilteredProducts === 'function' && getAdminFilteredProducts().length > 0)
+        ? getAdminFilteredProducts()
+        : products.slice(0, 50);
+
+      if (!list || list.length === 0) {
+        showToast('No products available for label printing', 'warning');
+        return;
+      }
+
+      showToast(`Generating ${list.length} bin labels for print...`, 'info');
+      const win = window.open('', '_blank', 'width=980,height=750');
+      if (!win) {
+        showToast('Pop-up blocked. Please allow pop-ups to print bin labels.', 'error');
+        return;
+      }
+
+      const labelsHtml = list.map(p => {
+        const partNo = p.barcode || p.productId || 'N/A';
+        const brand = p.brand || 'GENUINE';
+        const fit = p.fit || 'Universal';
+        const price = formatPrice(p.retailPrice);
+        const qty = p.stockQty || p.quantity || '0';
+        const cat = getStandardCategory(p.category, p.productName);
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(partNo)}`;
+
+        return `
+          <div class="bin-card">
+            <div class="bin-header">
+              <span class="co-title">HK MOTORS</span>
+              <span class="bin-id">ID: #${esc(p.productId)}</span>
+            </div>
+            <div class="bin-body">
+              <div class="bin-name">${esc(p.productName)}</div>
+              <div class="bin-tags">
+                <span class="bin-chip brand-chip">${esc(brand)}</span>
+                <span class="bin-chip fit-chip">${esc(fit)}</span>
+                <span class="bin-chip cat-chip">${esc(cat)}</span>
+              </div>
+              <div class="qr-block">
+                <img class="qr-code" src="${qrUrl}" alt="QR Code">
+                <div class="part-info-box">
+                  <div class="part-no-label">PART NUMBER / BARCODE</div>
+                  <div class="part-no-val">${esc(partNo)}</div>
+                </div>
+              </div>
+            </div>
+            <div class="bin-footer">
+              <div class="bin-price">Rs. ${price}</div>
+              <div class="bin-stock">Stock: ${esc(qty)}</div>
+            </div>
+          </div>`;
+      }).join('');
+
+      win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>HK Motors — Warehouse Bin Labels Tag Sheet</title>
+          <style>
+            @page { size: A4; margin: 8mm; }
+            * { box-sizing: border-box; }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fff; color: #000; margin: 0; padding: 10px; }
+            .print-controls { margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 10px 16px; border-radius: 10px; font-size: 13px; }
+            @media print { .print-controls { display: none !important; } }
+            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .bin-card { border: 2px solid #0f172a; border-radius: 10px; padding: 10px; page-break-inside: avoid; display: flex; flex-direction: column; justify-content: space-between; height: 215px; background: #fff; }
+            .bin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #0f172a; padding-bottom: 4px; font-weight: 800; font-size: 11px; }
+            .co-title { color: #0a355c; letter-spacing: 0.05em; }
+            .bin-id { background: #e2e8f0; padding: 1px 6px; border-radius: 4px; font-family: monospace; }
+            .bin-name { font-size: 13px; font-weight: 800; margin: 6px 0 4px; text-transform: uppercase; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 32px; }
+            .bin-tags { display: flex; gap: 4px; margin-bottom: 6px; flex-wrap: wrap; }
+            .bin-chip { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbd5e1; background: #f8fafc; text-transform: uppercase; }
+            .brand-chip { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+            .fit-chip { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+            .qr-block { display: flex; align-items: center; gap: 10px; margin-top: 4px; background: #fafafa; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 6px; }
+            .qr-code { width: 68px; height: 68px; border-radius: 4px; flex-shrink: 0; }
+            .part-info-box { flex: 1; min-width: 0; }
+            .part-no-label { font-size: 8px; color: #64748b; font-weight: 700; letter-spacing: 0.04em; }
+            .part-no-val { font-size: 13px; font-weight: 900; font-family: monospace; word-break: break-all; margin-top: 2px; }
+            .bin-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1.5px dashed #94a3b8; padding-top: 6px; margin-top: 6px; font-weight: 800; }
+            .bin-price { font-size: 14px; color: #e11d2e; }
+            .bin-stock { font-size: 11px; background: #0f172a; color: #fff; padding: 2px 8px; border-radius: 6px; }
+          </style>
+        </head>
+        <body>
+          <div class="print-controls">
+            <span>🏷️ <strong>HK Motors Bin Labels Sheet</strong> (${list.length} parts)</span>
+            <button onclick="window.print()" style="padding: 6px 16px; background: #e11d2e; color: #fff; border: none; border-radius: 6px; font-weight: 700; cursor: pointer;">🖨️ Print Labels</button>
+          </div>
+          <div class="grid">${labelsHtml}</div>
+          <scr` + `ipt>
+            window.onload = () => { setTimeout(() => { window.print(); }, 600); };
+          </scr` + `ipt>
+        </body>
+        </html>
+      `);
+      win.document.close();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PHASE 3: CUSTOMER ORDER & QUOTE HISTORY
+    // ═══════════════════════════════════════════════════════════════
+    function getCustomerOrderHistory() {
+      try { return JSON.parse(localStorage.getItem(CUSTOMER_ORDERS_KEY) || '[]'); }
+      catch (e) { return []; }
+    }
+
+    function saveCustomerOrderHistory(orderData) {
+      try {
+        const history = getCustomerOrderHistory();
+        history.unshift(orderData);
+        // keep last 50 customer order quotes
+        localStorage.setItem(CUSTOMER_ORDERS_KEY, JSON.stringify(history.slice(0, 50)));
+      } catch (e) {}
+    }
+
+    function reorderPastOrder(orderId) {
+      const history = getCustomerOrderHistory();
+      const target = history.find(o => o.id === orderId);
+      if (!target || !target.items) return;
+
+      let readdedCount = 0;
+      target.items.forEach(item => {
+        const p = products.find(x => x.productId === String(item.productId));
+        if (p) {
+          addToCart(p.productId, item.qty || 1);
+          readdedCount++;
+        }
+      });
+
+      if (readdedCount > 0) {
+        showToast(`Reordered ${readdedCount} items into your cart!`, 'success');
+        openCart();
+      } else {
+        showToast('Could not reload items for this order.', 'warning');
+      }
+    }
+
     // ── Precise Search Matcher & Normalizer ──
     function normalizeCode(str) {
       return String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -5563,6 +5929,163 @@
         const normTerm = normalizeCode(term);
         return fullText.includes(term) || (normTerm.length >= 2 && normText.includes(normTerm));
       });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PHASE 3: FUSE.JS POWERED FUZZY SEARCH (typo-tolerant fallback)
+    // ═══════════════════════════════════════════════════════════════
+    let _fuseInstance = null;
+    let _fuseProductsHash = 0;
+
+    function getFuseInstance() {
+      if (typeof Fuse === 'undefined') return null;
+      const hash = products.length;
+      if (_fuseInstance && _fuseProductsHash === hash) return _fuseInstance;
+      _fuseInstance = new Fuse(products, {
+        keys: [
+          { name: 'productName', weight: 0.45 },
+          { name: 'barcode',     weight: 0.25 },
+          { name: 'brand',       weight: 0.15 },
+          { name: 'fit',         weight: 0.10 },
+          { name: 'category',    weight: 0.05 },
+        ],
+        threshold: 0.38,
+        includeScore: true,
+        ignoreLocation: true,
+        minMatchCharLength: 2,
+      });
+      _fuseProductsHash = hash;
+      return _fuseInstance;
+    }
+
+    /** Returns Set of productId strings matching query via Fuse.js */
+    function fuseSearchIds(query) {
+      if (!query || query.length < 2) return null;
+      const fuse = getFuseInstance();
+      if (!fuse) return null;
+      const results = fuse.search(query, { limit: 120 });
+      if (results.length === 0) return null;
+      return new Set(results.map(r => String(r.item.productId)));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PHASE 3: AUTOCOMPLETE SUGGESTIONS DROPDOWN
+    // ═══════════════════════════════════════════════════════════════
+    function buildSuggestions(query, catalog, limit = 7) {
+      if (!query || query.length < 2) return [];
+      const q = query.toLowerCase().trim();
+
+      // Exact / substring matches first
+      const direct = catalog.filter(p => {
+        const blob = productSearchBlob(p);
+        return blob.includes(q);
+      }).slice(0, limit);
+
+      if (direct.length >= limit) return direct;
+
+      // Fuse.js fuzzy top-ups
+      const fuse = getFuseInstance();
+      if (!fuse) return direct;
+      const directIds = new Set(direct.map(p => String(p.productId)));
+      const fuseResults = fuse.search(q, { limit: limit * 2 })
+        .filter(r => !directIds.has(String(r.item.productId)))
+        .slice(0, limit - direct.length)
+        .map(r => r.item);
+
+      return [...direct, ...fuseResults];
+    }
+
+    let _suggKbIdx = -1;
+
+    function renderSuggestions(inputEl, dropdownEl, catalog) {
+      const q = inputEl.value.trim();
+      if (!q || q.length < 2) {
+        dropdownEl.innerHTML = '';
+        dropdownEl.classList.remove('visible');
+        _suggKbIdx = -1;
+        return;
+      }
+
+      const suggestions = buildSuggestions(q, catalog, 8);
+      if (suggestions.length === 0) {
+        dropdownEl.innerHTML = '';
+        dropdownEl.classList.remove('visible');
+        return;
+      }
+
+      dropdownEl.innerHTML =
+        '<div class="sugg-section-header">Suggestions</div>' +
+        suggestions.map((p, idx) => {
+          const name = esc(p.productName || 'Unknown');
+          const meta = [p.brand, p.barcode || p.productId, p.fit].filter(Boolean).join(' · ');
+          const icon = p.category && p.category.toLowerCase().includes('engine') ? '⚙️'
+            : p.category && p.category.toLowerCase().includes('brake') ? '🛑'
+            : p.category && p.category.toLowerCase().includes('elec') ? '⚡'
+            : p.category && p.category.toLowerCase().includes('filter') ? '🔍'
+            : '🔧';
+          return `<div class="sugg-item" data-idx="${idx}" role="option" tabindex="-1">
+            <span class="sugg-item-icon">${icon}</span>
+            <div class="sugg-item-body">
+              <div class="sugg-item-name">${name}</div>
+              <div class="sugg-item-meta">${esc(meta)}</div>
+            </div>
+          </div>`;
+        }).join('');
+
+      // Click to fill search
+      dropdownEl.querySelectorAll('.sugg-item').forEach((el, idx) => {
+        el.addEventListener('mousedown', e => {
+          e.preventDefault();
+          inputEl.value = suggestions[idx].productName || '';
+          dropdownEl.innerHTML = '';
+          dropdownEl.classList.remove('visible');
+          // Trigger the linked search
+          inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+      });
+
+      _suggKbIdx = -1;
+      dropdownEl.classList.add('visible');
+    }
+
+    function suggKbNav(e, inputEl, dropdownEl) {
+      const items = dropdownEl.querySelectorAll('.sugg-item');
+      if (!items.length) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        _suggKbIdx = Math.min(_suggKbIdx + 1, items.length - 1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        _suggKbIdx = Math.max(_suggKbIdx - 1, -1);
+      } else if (e.key === 'Escape') {
+        dropdownEl.classList.remove('visible');
+        _suggKbIdx = -1;
+        return;
+      } else { return; }
+      items.forEach((el, i) => el.classList.toggle('active', i === _suggKbIdx));
+      if (_suggKbIdx >= 0) {
+        inputEl.value = items[_suggKbIdx].querySelector('.sugg-item-name').textContent;
+      }
+    }
+
+    function initSearchAutocomplete() {
+      // Master catalog search
+      const masterInput = document.getElementById('masterSearch');
+      const masterDrop  = document.getElementById('masterSearchSuggestions');
+      if (masterInput && masterDrop) {
+        masterInput.addEventListener('input', debounce(() => {
+          renderSuggestions(masterInput, masterDrop, getCustomerCatalogProducts());
+        }, 160));
+        masterInput.addEventListener('keydown', e => suggKbNav(e, masterInput, masterDrop));
+        masterInput.addEventListener('blur', () => {
+          setTimeout(() => masterDrop.classList.remove('visible'), 150);
+        });
+        masterInput.addEventListener('focus', () => {
+          if (masterInput.value.trim().length >= 2) {
+            renderSuggestions(masterInput, masterDrop, getCustomerCatalogProducts());
+          }
+        });
+      }
     }
 
     /** Helper: Determine if a product matches a given search query */
@@ -7107,7 +7630,18 @@
         if (exactMatches.length > 0) {
           allMasterFiltered = exactMatches;
         } else {
-          allMasterFiltered = allMasterFiltered.filter(p => matchesProductSearch(p, searchQuery));
+          const directMatches = allMasterFiltered.filter(p => matchesProductSearch(p, searchQuery));
+          if (directMatches.length > 0) {
+            allMasterFiltered = directMatches;
+          } else {
+            // Fuse.js typo-tolerant fuzzy fallback — fires only when exact logic yields 0 results
+            const fuseIds = fuseSearchIds(searchQuery);
+            if (fuseIds && fuseIds.size > 0) {
+              allMasterFiltered = allMasterFiltered.filter(p => fuseIds.has(String(p.productId)));
+            } else {
+              allMasterFiltered = [];
+            }
+          }
         }
       }
 
@@ -7798,7 +8332,21 @@
       msg += `👤 *Customer:* ${name}\n`;
       msg += `📞 *Phone:* ${phone}\n\n`;
       msg += `*Items:*\n${lines.join('\n')}\n`;
-      if (notes) msg += `\n📝 *Notes:* ${notes}\n`;
+      // Save order to local customer quote history
+      saveCustomerOrderHistory({
+        id: 'ORD-' + Date.now().toString().slice(-6),
+        date: new Date().toISOString(),
+        customerName: name,
+        customerPhone: phone,
+        notes: notes,
+        items: items.map(({ product: p, qty }) => ({
+          productId: p.productId,
+          productName: p.productName,
+          retailPrice: p.retailPrice,
+          qty: qty
+        })),
+        total: items.reduce((sum, { product: p, qty }) => sum + (parseFloat(p.retailPrice) || 0) * qty, 0)
+      });
 
       // Save order to Supabase
       if (isCloudSyncActive && navigator.onLine) {
@@ -8526,6 +9074,21 @@
 
       loadAdminThumbnails(filtered);
       renderAnalyticsCharts(); // Render inventory analytics distribution chart
+      // Wire analytics toggle button (idempotent)
+      const analyticsToggleBtn = document.getElementById('analyticsToggleBtn');
+      const analyticsHeader = document.getElementById('analyticsToggleHeader');
+      const analyticsWrapper = document.getElementById('analyticsChartWrapper');
+      if (analyticsToggleBtn && !analyticsToggleBtn._wired) {
+        analyticsToggleBtn._wired = true;
+        const doToggle = () => {
+          const expanded = analyticsToggleBtn.getAttribute('aria-expanded') !== 'false';
+          analyticsWrapper.style.display = expanded ? 'none' : '';
+          analyticsToggleBtn.textContent = expanded ? '▼ Show' : '▲ Hide';
+          analyticsToggleBtn.setAttribute('aria-expanded', String(!expanded));
+        };
+        analyticsToggleBtn.addEventListener('click', e => { e.stopPropagation(); doToggle(); });
+        analyticsHeader.addEventListener('click', doToggle);
+      }
       } catch (err) {
         console.error('[Admin] Failed to render admin table:', err);
         showToast('Admin panel failed to load. Try refreshing.', 'error');
@@ -8707,11 +9270,6 @@
 
     async function saveProductForm(e) {
       e.preventDefault();
-      
-      if (isCloudSyncActive && !navigator.onLine) {
-        showToast('Cannot save changes while offline.', 'error');
-        return;
-      }
 
       const form = document.getElementById('productForm');
       const data = {};
@@ -8731,9 +9289,9 @@
       }
 
       try {
-        // Upload images if cloud sync is active
-        const cloudUrls = [];
-        if (isCloudSyncActive) {
+        if (isCloudSyncActive && !navigator.onLine) {
+          queueOfflineAction('upsert_product', data);
+        } else if (isCloudSyncActive) {
           // Delete old images from Supabase Storage that were removed by the user
           const oldProduct = editingProductId ? products.find(p => p.productId === editingProductId) : null;
           const oldCloudUrls = (oldProduct && oldProduct.image_urls && Array.isArray(oldProduct.image_urls)) ? oldProduct.image_urls : [];
@@ -8752,6 +9310,7 @@
           }
 
           showToast('Uploading images to cloud...', 'info');
+          const cloudUrls = [];
           for (let i = 0; i < modalImages.length; i++) {
             const img = modalImages[i];
             if (img.startsWith('data:')) {
@@ -8804,12 +9363,9 @@
       if (!deletingProductId) return;
       const id = deletingProductId;
 
-      if (isCloudSyncActive) {
-        if (!navigator.onLine) {
-          showToast('Cannot delete products while offline.', 'error');
-          return;
-        }
-
+      if (isCloudSyncActive && !navigator.onLine) {
+        queueOfflineAction('delete_product', { productId: id });
+      } else if (isCloudSyncActive) {
         // Auto-delete product images from Supabase Storage on product deletion
         const prod = products.find(p => p.productId === id);
         if (prod && prod.image_urls && Array.isArray(prod.image_urls) && prod.image_urls.length > 0) {
@@ -9532,6 +10088,7 @@
         currentLang = localStorage.getItem(LANG_KEY) || 'en';
         applyLanguage();
         handleRoute(); // refresh views with loaded catalog
+        initSearchAutocomplete(); // Phase 3: wire up autocomplete dropdown
 
         // Background cloud sync — never block login / navigation
         if (isCloudSyncActive && navigator.onLine) {
@@ -9708,7 +10265,13 @@
       document.getElementById('whatsappBtn').addEventListener('click', sendWhatsApp);
       document.getElementById('downloadReceiptBtn').addEventListener('click', downloadOrderReceipt);
 
-      // Order History
+      // Order History & Bin Labels
+      const printLabelsBtn = document.getElementById('printBinLabelsBtn');
+      if (printLabelsBtn) {
+        printLabelsBtn.addEventListener('click', printBinLabels);
+      }
+      updateOutboxPill();
+
       document.getElementById('orderHistoryBtn').addEventListener('click', loadOrderHistory);
       document.getElementById('closeOrderHistoryBtn').addEventListener('click', () => {
         const section = document.getElementById('orderHistorySection');
