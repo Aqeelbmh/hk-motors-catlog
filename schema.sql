@@ -77,24 +77,30 @@ CREATE POLICY "Allow public delete access" ON public.products
     USING (true);
 
 -- 4. Storage Bucket Setup
--- Note: Create a public storage bucket named 'product-images' in the Supabase Dashboard.
--- Ensure public access is enabled so anyone can view product images.
--- Storage RLS Policies to allow public image retrieval and anonymous uploads:
--- run these in the SQL Editor if required:
-/*
+-- 4. Storage Bucket Setup & Policies
+-- Create public storage bucket named 'product-images' and enable public access
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('product-images', 'product-images', true)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET public = true;
 
+DROP POLICY IF EXISTS "Allow public image select" ON storage.objects;
 CREATE POLICY "Allow public image select" ON storage.objects
     FOR SELECT TO public
     USING (bucket_id = 'product-images');
 
+DROP POLICY IF EXISTS "Allow public image insert" ON storage.objects;
 CREATE POLICY "Allow public image insert" ON storage.objects
     FOR INSERT TO public
     WITH CHECK (bucket_id = 'product-images');
 
+DROP POLICY IF EXISTS "Allow public image update" ON storage.objects;
+CREATE POLICY "Allow public image update" ON storage.objects
+    FOR UPDATE TO public
+    USING (bucket_id = 'product-images')
+    WITH CHECK (bucket_id = 'product-images');
+
+DROP POLICY IF EXISTS "Allow public image delete" ON storage.objects;
 CREATE POLICY "Allow public image delete" ON storage.objects
     FOR DELETE TO public
     USING (bucket_id = 'product-images');
-*/
+
