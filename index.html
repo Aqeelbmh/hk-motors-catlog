@@ -989,16 +989,16 @@
       top: 0;
       right: 0;
       width: 100%;
-      max-width: 440px;
+      max-width: 480px;
       height: 100%;
       background: var(--bg-card);
       z-index: 301;
       transform: translateX(100%);
-      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
       flex-direction: column;
       border-left: 1px solid var(--border);
-      box-shadow: -10px 0 40px rgba(0, 0, 0, 0.4);
+      box-shadow: -12px 0 40px rgba(0, 0, 0, 0.45);
     }
 
     .cart-panel.open { transform: translateX(0); }
@@ -1007,11 +1007,12 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1.25rem 1.5rem;
+      padding: 1.15rem 1.25rem;
       border-bottom: 1px solid var(--border);
+      background: var(--surface);
     }
 
-    .cart-header h2 { font-size: 1.2rem; font-weight: 800; color: var(--text); }
+    .cart-header h2 { font-size: 1.15rem; font-weight: 800; color: var(--text); }
 
     .close-btn {
       background: var(--surface);
@@ -1031,6 +1032,191 @@
     .close-btn:hover {
       background: var(--surface-input-focus);
       border-color: var(--text-muted);
+    }
+
+    /* Stepper Navigation Tab Bar */
+    .cart-steps-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.25rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .cart-step-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.65rem;
+      border-radius: 999px;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .cart-step-pill.active {
+      color: var(--accent);
+      background: rgba(14, 165, 233, 0.1);
+      border-color: rgba(14, 165, 233, 0.3);
+    }
+    .cart-step-pill .step-num {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--surface-hover);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+    .cart-step-pill.active .step-num {
+      background: var(--accent);
+      color: #fff;
+    }
+    .cart-steps-arrow {
+      color: var(--border);
+      font-size: 0.75rem;
+    }
+
+    /* Cart Step Views */
+    .cart-step-view {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .cart-step-view.hidden {
+      display: none !important;
+    }
+
+    /* Step 2 Confirm Body */
+    .cart-confirm-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Order Review Receipt Card */
+    .order-preview-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.15rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .order-preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.55rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .order-preview-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-edit-items {
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+    }
+    .btn-edit-items:hover {
+      background: rgba(14, 165, 233, 0.1);
+      text-decoration: underline;
+    }
+
+    .order-preview-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      max-height: 200px;
+      overflow-y: auto;
+      padding-right: 0.2rem;
+    }
+    .order-preview-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.45rem 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 0.84rem;
+    }
+    .order-preview-item:last-child {
+      border-bottom: none;
+    }
+    .order-preview-item-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex: 1;
+      min-width: 0;
+    }
+    .order-preview-thumb {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      object-fit: contain;
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .order-preview-name {
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .order-preview-qty {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .order-preview-price {
+      font-weight: 800;
+      color: var(--accent);
+      white-space: nowrap;
+      font-size: 0.86rem;
+    }
+
+    /* Customer details card */
+    .customer-details-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.15rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .customer-card-title {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
     }
 
     .cart-items {
@@ -5282,9 +5468,10 @@
 
   <div class="overlay" id="cartOverlay"></div>
   <aside class="cart-panel" id="cartPanel">
+    <!-- Header with title, counter & close -->
     <div class="cart-header">
       <div style="display:flex;align-items:center;gap:0.6rem;">
-        <h2 data-i18n="yourOrder">Your Order</h2>
+        <h2 id="cartMainTitle" data-i18n="yourOrder">Your Order</h2>
         <span class="cart-header-count" id="cartHeaderCount">0</span>
       </div>
       <div style="display:flex;align-items:center;gap:0.5rem;">
@@ -5292,46 +5479,103 @@
         <button class="close-btn" id="closeCart" aria-label="Close cart">&times;</button>
       </div>
     </div>
-    <div class="cart-items" id="cartItems"></div>
-    <div class="cart-footer">
-      <div class="cart-total" id="cartTotalRow">
-        <div class="cart-total-label">
-          <span data-i18n="grandTotal">Estimated Total</span>
-          <div class="cart-total-subtext" id="cartTotalSubtext">Calculated from catalog prices</div>
+
+    <!-- Stepper Navigation Tab Bar -->
+    <div class="cart-steps-nav" id="cartStepsNav">
+      <button type="button" class="cart-step-pill active" id="pillStepReview">
+        <span class="step-num">1</span>
+        <span>1. Review Items</span>
+      </button>
+      <span class="cart-steps-arrow" aria-hidden="true">→</span>
+      <button type="button" class="cart-step-pill" id="pillStepConfirm">
+        <span class="step-num">2</span>
+        <span>2. Confirm & Send</span>
+      </button>
+    </div>
+
+    <!-- STEP 1 VIEW: Full-height Review Items List -->
+    <div class="cart-step-view" id="cartStepReviewView">
+      <div class="cart-items" id="cartItems"></div>
+      <div class="cart-footer cart-review-footer">
+        <div class="cart-total" id="cartTotalRow">
+          <div class="cart-total-label">
+            <span data-i18n="grandTotal">Estimated Total</span>
+            <div class="cart-total-subtext" id="cartTotalSubtext">Calculated from catalog prices</div>
+          </div>
+          <span id="cartGrandTotal">Rs. 0</span>
         </div>
-        <span id="cartGrandTotal">Rs. 0</span>
+        <button type="button" class="btn btn-accent btn-proceed-checkout" id="btnProceedCheckout" style="width:100%;height:48px;font-size:1rem;font-weight:800;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:0.5rem;">
+          <span>Review & Confirm Order</span>
+          <span style="font-size:1.15rem;">→</span>
+        </button>
       </div>
-      <div class="form-group">
-        <label class="required" for="customerName" data-i18n="customerName">Your Name</label>
-        <input type="text" class="form-input" id="customerName" autocomplete="name" placeholder="Enter your full name">
-        <span class="field-error-msg" id="nameErrorMsg" style="display:none;">Please enter your name</span>
+    </div>
+
+    <!-- STEP 2 VIEW: Detailed Order Preview Summary + Customer Form + Send -->
+    <div class="cart-step-view hidden" id="cartStepConfirmView">
+      <div class="cart-confirm-body">
+        <!-- Order Preview / Summary Card before sending -->
+        <div class="order-preview-card">
+          <div class="order-preview-header">
+            <div class="order-preview-title">
+              <span>📋</span>
+              <span>Order Summary Before Sending</span>
+            </div>
+            <button type="button" class="btn-edit-items" id="btnEditItemsLink">Edit Items ✏️</button>
+          </div>
+          <div class="order-preview-list" id="orderPreviewList"></div>
+          <div class="order-preview-footer" style="display:flex;justify-content:space-between;align-items:center;margin-top:0.85rem;padding-top:0.65rem;border-top:1px dashed var(--border);font-weight:800;">
+            <span style="font-size:0.9rem;color:var(--text);">Total Amount:</span>
+            <span id="confirmPreviewGrandTotal" style="font-size:1.15rem;color:var(--accent);">Rs. 0</span>
+          </div>
+        </div>
+
+        <!-- Customer details card -->
+        <div class="customer-details-card">
+          <div class="customer-card-title">
+            <span>👤</span>
+            <span>Customer & Contact Details</span>
+          </div>
+          <div class="form-group">
+            <label class="required" for="customerName" data-i18n="customerName">Your Name</label>
+            <input type="text" class="form-input" id="customerName" autocomplete="name" placeholder="Enter your full name">
+            <span class="field-error-msg" id="nameErrorMsg" style="display:none;">Please enter your name</span>
+          </div>
+          <div class="form-group">
+            <label class="required" for="customerPhone" data-i18n="phoneNumber">Phone Number (WhatsApp)</label>
+            <input type="tel" class="form-input" id="customerPhone" autocomplete="tel" placeholder="e.g. 077 123 4567 or +94 77 123 4567">
+            <span class="field-error-msg" id="phoneErrorMsg" style="display:none;">Please enter a valid phone number (at least 9 digits)</span>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="orderNotes" data-i18n="notes">Notes / Special Instructions (optional)</label>
+            <textarea class="form-textarea" id="orderNotes" rows="2" placeholder="Vehicle model, year, part numbers, or delivery notes..."></textarea>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="required" for="customerPhone" data-i18n="phoneNumber">Phone Number (WhatsApp)</label>
-        <input type="tel" class="form-input" id="customerPhone" autocomplete="tel" placeholder="e.g. 077 123 4567 or +94 77 123 4567">
-        <span class="field-error-msg" id="phoneErrorMsg" style="display:none;">Please enter a valid phone number (at least 9 digits)</span>
+
+      <div class="cart-footer cart-confirm-footer">
+        <p class="cart-whatsapp-hint" style="margin-bottom:0.5rem;">Opens WhatsApp with your complete order breakdown ready to send.</p>
+        <button class="btn-whatsapp" id="whatsappBtn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.884 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          <span data-i18n="sendWhatsApp">Confirm & Send Order via WhatsApp</span>
+        </button>
+        <button class="btn btn-ghost" id="downloadReceiptBtn" style="width: 100%; margin-top: 0.5rem; border-radius: 12px; font-weight: 700; height: 46px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+          📄 Download Receipt (PDF)
+        </button>
+        <button type="button" class="btn-back-step" id="btnBackToItems" style="background:transparent;border:none;color:var(--text-muted);font-size:0.82rem;font-weight:700;width:100%;text-align:center;padding:0.45rem 0;cursor:pointer;margin-top:0.25rem;">
+          ← Back to Edit Items
+        </button>
       </div>
-      <div class="form-group">
-        <label for="orderNotes" data-i18n="notes">Notes (optional)</label>
-        <textarea class="form-textarea" id="orderNotes" rows="2" placeholder="Vehicle model, year, part numbers, or special notes..."></textarea>
-      </div>
-      <p class="cart-whatsapp-hint">Opens WhatsApp with your order ready — tap <strong>Send</strong> there to complete.</p>
-      <button class="btn-whatsapp" id="whatsappBtn" disabled>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.884 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        <span data-i18n="sendWhatsApp">Send Order via WhatsApp</span>
-      </button>
-      <button class="btn btn-ghost" id="downloadReceiptBtn" disabled style="width: 100%; margin-top: 0.5rem; border-radius: 12px; font-weight: 700; height: 48px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-        📄 Download Receipt (PDF)
-      </button>
     </div>
   </aside>
 
   <!-- Order confirmation after WhatsApp opens -->
   <div class="modal-overlay" id="orderConfirmModal">
-    <div class="modal order-confirm-modal">
+    <div class="modal order-confirm-modal" style="max-width:440px;">
       <div class="order-confirm-icon" aria-hidden="true">✓</div>
-      <h3>Order ready in WhatsApp</h3>
-      <p>WhatsApp should open with your order message. Tap <strong>Send</strong> in WhatsApp to complete your order with HK Motors.</p>
+      <h3>Order Sent to WhatsApp</h3>
+      <p>WhatsApp has been opened with your order details. Tap <strong>Send</strong> in WhatsApp to complete sending to HK Motors.</p>
+      <div id="orderConfirmReceiptPreview" style="margin:1rem 0;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0.85rem;max-height:200px;overflow-y:auto;"></div>
       <button type="button" class="btn btn-accent" id="orderConfirmContinueBtn" style="width:100%;margin-top:0.5rem;">Continue shopping</button>
     </div>
   </div>
@@ -8632,15 +8876,46 @@
       }
     }
 
+    function switchCartStep(step) {
+      const stepReviewView = document.getElementById('cartStepReviewView');
+      const stepConfirmView = document.getElementById('cartStepConfirmView');
+      const pillReview = document.getElementById('pillStepReview');
+      const pillConfirm = document.getElementById('pillStepConfirm');
+      const mainTitle = document.getElementById('cartMainTitle');
+
+      if (step === 'confirm') {
+        const items = Object.values(cart);
+        if (items.length === 0) {
+          showToast(t('cartEmpty'), 'warning');
+          return;
+        }
+        if (stepReviewView) stepReviewView.classList.add('hidden');
+        if (stepConfirmView) stepConfirmView.classList.remove('hidden');
+        if (pillReview) pillReview.classList.remove('active');
+        if (pillConfirm) pillConfirm.classList.add('active');
+        if (mainTitle) mainTitle.textContent = 'Confirm Order';
+        renderCart(); // Refresh preview summary
+      } else {
+        if (stepReviewView) stepReviewView.classList.remove('hidden');
+        if (stepConfirmView) stepConfirmView.classList.add('hidden');
+        if (pillReview) pillReview.classList.add('active');
+        if (pillConfirm) pillConfirm.classList.remove('active');
+        if (mainTitle) mainTitle.textContent = t('yourOrder') || 'Your Order';
+      }
+    }
+
     async function renderCart() {
       const container = document.getElementById('cartItems');
       const items = Object.values(cart);
       const clearBtn = document.getElementById('clearCartBtn');
       const totalRow = document.getElementById('cartTotalRow');
+      const proceedBtn = document.getElementById('btnProceedCheckout');
 
       if (items.length === 0) {
         if (clearBtn) clearBtn.style.display = 'none';
         if (totalRow) totalRow.style.display = 'none';
+        if (proceedBtn) proceedBtn.disabled = true;
+        switchCartStep('review');
         container.innerHTML = `
           <div class="cart-empty-state" style="text-align:center;padding:3rem 1rem;">
             <div style="font-size:3.5rem;margin-bottom:0.75rem;opacity:0.8;">🛒</div>
@@ -8649,6 +8924,8 @@
             <button type="button" class="btn btn-accent" id="cartBrowseBtn" style="padding:0.75rem 1.5rem;border-radius:12px;font-weight:700;">${t('browseCatalog')}</button>
           </div>`;
         document.getElementById('cartGrandTotal').textContent = `${t('rs')} 0`;
+        const confirmTotalEl = document.getElementById('confirmPreviewGrandTotal');
+        if (confirmTotalEl) confirmTotalEl.textContent = `${t('rs')} 0`;
         document.getElementById('whatsappBtn').disabled = true;
         const dlBtn = document.getElementById('downloadReceiptBtn');
         if (dlBtn) dlBtn.disabled = true;
@@ -8664,6 +8941,7 @@
 
       if (clearBtn) clearBtn.style.display = 'inline-block';
       if (totalRow) totalRow.style.display = 'flex';
+      if (proceedBtn) proceedBtn.disabled = false;
 
       let total = 0;
       let hasZeroPrice = false;
@@ -8707,6 +8985,7 @@
       }));
       container.innerHTML = itemsHtml.join('');
 
+      // Step 1 Grand Total
       const grandTotalEl = document.getElementById('cartGrandTotal');
       const subtextEl = document.getElementById('cartTotalSubtext');
       if (total > 0) {
@@ -8717,6 +8996,36 @@
       } else {
         grandTotalEl.textContent = 'Price on Request';
         if (subtextEl) subtextEl.textContent = 'Exact pricing confirmed via WhatsApp';
+      }
+
+      // Step 2 Detailed Order Summary Before Sending
+      const previewList = document.getElementById('orderPreviewList');
+      if (previewList) {
+        previewList.innerHTML = items.map(({ product: p, qty }) => {
+          const price = parseFloat(p.retailPrice) || 0;
+          const lineTotal = price * qty;
+          const imgUrl = getFirstImage(p.productId) || (p.image_urls && p.image_urls[0]) || '';
+          const thumb = imgUrl
+            ? `<img class="order-preview-thumb" src="${imgUrl}" alt="${esc(p.productName)}" loading="lazy">`
+            : `<div class="order-preview-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.75rem;background:var(--surface-hover);">📦</div>`;
+          const partStr = p.barcode || p.productId || '';
+          return `
+            <div class="order-preview-item">
+              <div class="order-preview-item-left">
+                ${thumb}
+                <div style="min-width:0;flex:1;">
+                  <div class="order-preview-name" title="${esc(p.productName)}">${esc(p.productName)}</div>
+                  <div class="order-preview-qty">${esc(p.brand || 'GENUINE')}${partStr ? ` • #${esc(partStr)}` : ''} • Qty: <strong>${qty}</strong></div>
+                </div>
+              </div>
+              <div class="order-preview-price">${price > 0 ? `${t('rs')} ${formatPrice(lineTotal)}` : 'On Request'}</div>
+            </div>`;
+        }).join('');
+      }
+
+      const confirmTotalEl = document.getElementById('confirmPreviewGrandTotal');
+      if (confirmTotalEl) {
+        confirmTotalEl.textContent = total > 0 ? `${t('rs')} ${formatPrice(total)}` : 'Price on Request';
       }
 
       document.getElementById('whatsappBtn').disabled = false;
@@ -8733,6 +9042,7 @@
     }
 
     function openCart() {
+      switchCartStep('review');
       document.getElementById('cartOverlay').classList.add('open');
       document.getElementById('cartPanel').classList.add('open');
       renderCart();
@@ -8741,6 +9051,7 @@
     function closeCart() {
       document.getElementById('cartOverlay').classList.remove('open');
       document.getElementById('cartPanel').classList.remove('open');
+      switchCartStep('review');
     }
 
     function validatePhoneNumber(val) {
@@ -8861,6 +9172,25 @@
         } catch (e) {
           console.warn('[Orders] Could not initiate cloud save:', e);
         }
+      }
+
+      // Populate Confirmation Modal receipt preview before clearing
+      const modalReceipt = document.getElementById('orderConfirmReceiptPreview');
+      if (modalReceipt) {
+        modalReceipt.innerHTML = `
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.4rem;">Order for <strong>${esc(name)}</strong> (${esc(phone)}):</div>
+          ${items.map(({ product: p, qty }) => {
+            const price = parseFloat(p.retailPrice) || 0;
+            return `
+              <div style="display:flex;justify-content:space-between;padding:0.25rem 0;font-size:0.82rem;border-bottom:1px dashed var(--border);">
+                <span>${esc(p.productName)} × ${qty}</span>
+                <span style="font-weight:700;">${price > 0 ? 'Rs. ' + formatPrice(price * qty) : 'On Request'}</span>
+              </div>`;
+          }).join('')}
+          <div style="display:flex;justify-content:space-between;margin-top:0.4rem;font-weight:800;font-size:0.9rem;">
+            <span>Total:</span>
+            <span style="color:var(--accent);">${total > 0 ? 'Rs. ' + formatPrice(total) : 'Price on Request'}</span>
+          </div>`;
       }
 
       // Open WhatsApp immediately with fallback so popup blocker never stops it
@@ -10816,6 +11146,21 @@
 
       const clearCartBtn = document.getElementById('clearCartBtn');
       if (clearCartBtn) clearCartBtn.addEventListener('click', clearCart);
+
+      const btnProceedCheckout = document.getElementById('btnProceedCheckout');
+      if (btnProceedCheckout) btnProceedCheckout.addEventListener('click', () => switchCartStep('confirm'));
+
+      const btnBackToItems = document.getElementById('btnBackToItems');
+      if (btnBackToItems) btnBackToItems.addEventListener('click', () => switchCartStep('review'));
+
+      const btnEditItemsLink = document.getElementById('btnEditItemsLink');
+      if (btnEditItemsLink) btnEditItemsLink.addEventListener('click', () => switchCartStep('review'));
+
+      const pillStepReview = document.getElementById('pillStepReview');
+      if (pillStepReview) pillStepReview.addEventListener('click', () => switchCartStep('review'));
+
+      const pillStepConfirm = document.getElementById('pillStepConfirm');
+      if (pillStepConfirm) pillStepConfirm.addEventListener('click', () => switchCartStep('confirm'));
 
       // Cart Items Interactive Delegation
       const cartItemsEl = document.getElementById('cartItems');
