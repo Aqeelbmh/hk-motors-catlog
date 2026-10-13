@@ -1036,40 +1036,188 @@
     .cart-items {
       flex: 1;
       overflow-y: auto;
-      padding: 1.25rem 1.5rem;
+      padding: 1.25rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .cart-header-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-hover);
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+
+    .btn-clear-cart {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .btn-clear-cart:hover {
+      color: var(--danger);
+      background: rgba(239, 68, 68, 0.08);
     }
 
     .cart-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 0.85rem;
-      padding: 1rem 0;
-      border-bottom: 1px solid var(--border);
+      gap: 0.75rem;
+      padding: 0.85rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .cart-item:hover {
+      border-color: rgba(14, 165, 233, 0.35);
     }
 
-    .cart-item:last-child {
-      border-bottom: none;
+    .cart-item-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+      min-width: 0;
     }
 
-    .cart-item-info { flex: 1; min-width: 0; }
-    .cart-item-name { font-weight: 700; font-size: 0.95rem; color: var(--text); line-height: 1.3; }
-    .cart-item-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
-    .cart-item-price { font-weight: 800; color: var(--accent); white-space: nowrap; font-size: 0.95rem; }
+    .cart-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .cart-item-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cart-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+    .cart-item-brand {
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(14, 165, 233, 0.08);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    .cart-item-pricing {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin-top: 0.3rem;
+    }
+    .cart-item-unit-price {
+      font-weight: 800;
+      font-size: 0.88rem;
+      color: var(--text);
+    }
+    .cart-item-line-total {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .cart-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-shrink: 0;
+    }
+
+    .cart-qty-control {
+      display: inline-flex;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .cart-qty-btn {
+      width: 26px;
+      height: 26px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+      user-select: none;
+    }
+    .cart-qty-btn:hover {
+      background: var(--surface-hover);
+      color: var(--accent);
+    }
+    .cart-qty-btn:active {
+      transform: scale(0.9);
+    }
+
+    .cart-qty-input {
+      width: 28px;
+      height: 26px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      text-align: center;
+      font-weight: 800;
+      font-size: 0.82rem;
+      -moz-appearance: textfield;
+      padding: 0;
+    }
+    .cart-qty-input::-webkit-outer-spin-button,
+    .cart-qty-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
 
     .cart-item-remove {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.2);
+      width: 28px;
+      height: 28px;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.15);
       color: var(--danger);
       cursor: pointer;
-      font-size: 0.8rem;
-      padding: 0.35rem 0.5rem;
-      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
       transition: all 0.2s;
+      padding: 0;
     }
     .cart-item-remove:hover {
       background: var(--danger);
       color: #fff;
+      transform: scale(1.05);
     }
 
     .cart-footer {
@@ -1081,15 +1229,78 @@
 
     .cart-total {
       display: flex;
+      align-items: center;
       justify-content: space-between;
+      margin-bottom: 1.15rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px dashed var(--border);
+    }
+    .cart-total-label {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .cart-total-subtext {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+    .cart-total span#cartGrandTotal {
       font-size: 1.25rem;
       font-weight: 800;
-      margin-bottom: 1.25rem;
-      border-bottom: 1px dashed var(--border);
-      padding-bottom: 0.75rem;
+      color: var(--accent);
     }
 
-    .cart-total span:last-child { color: var(--accent); }
+    .input-error {
+      border-color: var(--danger) !important;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16) !important;
+    }
+
+    .field-error-msg {
+      color: var(--danger);
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 0.25rem;
+      display: block;
+    }
+
+    .header-cart-btn {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .header-cart-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .header-cart-badge, .mobile-cart-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--danger);
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 800;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      border: 2px solid var(--bg-card);
+    }
 
     .form-group {
       margin-bottom: 0.85rem;
@@ -4759,6 +4970,10 @@
     </nav>
 
     <div class="header-right">
+      <button type="button" class="header-cart-btn" id="headerCartBtn" aria-label="Open Cart" title="View Order">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span class="header-cart-badge hidden" id="headerCartBadge">0</span>
+      </button>
       <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle light or dark mode" title="Toggle theme">
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -4775,6 +4990,7 @@
     <a href="#/home" class="mobile-nav-link" data-hash="#/home"><span class="nav-ico" aria-hidden="true">🏠</span>Home</a>
     <a href="#/categories" class="mobile-nav-link" data-hash="#/categories"><span class="nav-ico" aria-hidden="true">📂</span>Categories</a>
     <a href="#/products" class="mobile-nav-link" data-hash="#/products"><span class="nav-ico" aria-hidden="true">🔧</span>Products</a>
+    <a href="javascript:void(0)" class="mobile-nav-link" id="mobileNavCartBtn" aria-label="Cart"><span class="nav-ico" style="position:relative;display:inline-block;" aria-hidden="true">🛒<span class="mobile-cart-badge hidden" id="mobileNavCartBadge">0</span></span>Cart</a>
   </nav>
 
   <!-- HOME PAGE VIEW -->
@@ -5067,26 +5283,37 @@
   <div class="overlay" id="cartOverlay"></div>
   <aside class="cart-panel" id="cartPanel">
     <div class="cart-header">
-      <h2 data-i18n="yourOrder">Your Order</h2>
-      <button class="close-btn" id="closeCart">&times;</button>
+      <div style="display:flex;align-items:center;gap:0.6rem;">
+        <h2 data-i18n="yourOrder">Your Order</h2>
+        <span class="cart-header-count" id="cartHeaderCount">0</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <button type="button" class="btn-clear-cart" id="clearCartBtn" style="display:none;" title="Clear order">Clear</button>
+        <button class="close-btn" id="closeCart" aria-label="Close cart">&times;</button>
+      </div>
     </div>
     <div class="cart-items" id="cartItems"></div>
     <div class="cart-footer">
-      <div class="cart-total" style="display: none !important;">
-        <span data-i18n="grandTotal">Grand Total</span>
+      <div class="cart-total" id="cartTotalRow">
+        <div class="cart-total-label">
+          <span data-i18n="grandTotal">Estimated Total</span>
+          <div class="cart-total-subtext" id="cartTotalSubtext">Calculated from catalog prices</div>
+        </div>
         <span id="cartGrandTotal">Rs. 0</span>
       </div>
       <div class="form-group">
-        <label class="required" data-i18n="customerName">Your Name</label>
-        <input type="text" class="form-input" id="customerName" autocomplete="name">
+        <label class="required" for="customerName" data-i18n="customerName">Your Name</label>
+        <input type="text" class="form-input" id="customerName" autocomplete="name" placeholder="Enter your full name">
+        <span class="field-error-msg" id="nameErrorMsg" style="display:none;">Please enter your name</span>
       </div>
       <div class="form-group">
-        <label class="required" data-i18n="phoneNumber">Phone Number</label>
-        <input type="tel" class="form-input" id="customerPhone" autocomplete="tel">
+        <label class="required" for="customerPhone" data-i18n="phoneNumber">Phone Number (WhatsApp)</label>
+        <input type="tel" class="form-input" id="customerPhone" autocomplete="tel" placeholder="e.g. 077 123 4567 or +94 77 123 4567">
+        <span class="field-error-msg" id="phoneErrorMsg" style="display:none;">Please enter a valid phone number (at least 9 digits)</span>
       </div>
       <div class="form-group">
-        <label data-i18n="notes">Notes (optional)</label>
-        <textarea class="form-textarea" id="orderNotes" rows="2"></textarea>
+        <label for="orderNotes" data-i18n="notes">Notes (optional)</label>
+        <textarea class="form-textarea" id="orderNotes" rows="2" placeholder="Vehicle model, year, part numbers, or special notes..."></textarea>
       </div>
       <p class="cart-whatsapp-hint">Opens WhatsApp with your order ready — tap <strong>Send</strong> there to complete.</p>
       <button class="btn-whatsapp" id="whatsappBtn" disabled>
@@ -7928,7 +8155,16 @@
       };
 
       document.getElementById('detailsAddToCartBtn').onclick = () => {
-        addToCart(id, parseInt(qtyInput.value) || 1);
+        const btn = document.getElementById('detailsAddToCartBtn');
+        const qty = parseInt(qtyInput.value) || 1;
+        addToCart(id, qty);
+        const originalText = btn.textContent;
+        btn.textContent = 'Added to Order ✓';
+        btn.style.background = '#10b981';
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '';
+        }, 1100);
       };
 
       document.getElementById('detailsWhatsAppInquiryBtn').onclick = () => {
@@ -8270,21 +8506,75 @@
     function addToCart(productId, qty) {
       const p = products.find(x => String(x.productId) === String(productId));
       if (!p) return;
-      qty = Math.max(1, qty);
-      if (!cart[productId]) {
-        cart[productId] = { product: p, qty: 0 };
+      qty = Math.max(1, parseInt(qty) || 1);
+      const id = String(productId);
+      if (!cart[id]) {
+        cart[id] = { product: p, qty: 0 };
       }
-      cart[productId].qty = (cart[productId].qty || 0) + qty;
+      cart[id].qty = (cart[id].qty || 0) + qty;
       saveCart();
       updateCartBadge();
-      showToast(t('addedToCart'));
+      showToast(`${t('addedToCart')} (+${qty})`);
+    }
+
+    function changeCartItemQty(productId, delta) {
+      const id = String(productId);
+      if (!cart[id]) return;
+      const current = parseInt(cart[id].qty) || 1;
+      const next = current + delta;
+      if (next <= 0) {
+        delete cart[id];
+      } else {
+        cart[id].qty = next;
+      }
+      saveCart();
+      updateCartBadge();
+      renderCart();
+    }
+
+    function setCartItemQty(productId, qty) {
+      const id = String(productId);
+      if (!cart[id]) return;
+      const val = Math.max(1, parseInt(qty) || 1);
+      cart[id].qty = val;
+      saveCart();
+      updateCartBadge();
+      renderCart();
+    }
+
+    function removeCartItem(productId) {
+      const id = String(productId);
+      if (cart[id]) {
+        delete cart[id];
+        saveCart();
+        updateCartBadge();
+        renderCart();
+      }
+    }
+
+    function clearCart() {
+      if (Object.keys(cart).length === 0) return;
+      cart = {};
+      saveCart();
+      updateCartBadge();
+      renderCart();
+      showToast('Order cleared');
     }
 
     function saveCart() {
       try {
         const slim = {};
         Object.entries(cart).forEach(([id, item]) => {
-          slim[id] = { productId: item.product.productId, productName: item.product.productName, qty: item.qty };
+          if (item && item.product) {
+            slim[id] = {
+              productId: String(item.product.productId),
+              productName: item.product.productName,
+              retailPrice: item.product.retailPrice || '0',
+              brand: item.product.brand || '',
+              barcode: item.product.barcode || '',
+              qty: parseInt(item.qty) || 1
+            };
+          }
         });
         localStorage.setItem(CART_KEY, JSON.stringify(slim));
       } catch (e) { /* ignore */ }
@@ -8296,31 +8586,67 @@
         if (!stored) return;
         const slim = JSON.parse(stored);
         Object.entries(slim).forEach(([id, item]) => {
-          const p = products.find(x => String(x.productId) === String(id));
-          if (p) {
-            cart[id] = { product: p, qty: item.qty || 1 };
-          }
+          const p = products.find(x => String(x.productId) === String(id)) || {
+            productId: item.productId || id,
+            productName: item.productName || 'Spare Part',
+            retailPrice: item.retailPrice || '0',
+            brand: item.brand || 'GENUINE',
+            barcode: item.barcode || ''
+          };
+          cart[id] = { product: p, qty: parseInt(item.qty) || 1 };
         });
         updateCartBadge();
       } catch (e) { /* ignore */ }
     }
 
     function updateCartBadge() {
-      const total = Object.values(cart).reduce((s, i) => s + i.qty, 0);
-      const badge = document.getElementById('fabBadge');
-      badge.textContent = total;
-      badge.classList.toggle('hidden', total === 0);
+      const items = Object.values(cart);
+      const totalItems = items.reduce((s, i) => s + (parseInt(i.qty) || 1), 0);
+
+      const fabBadge = document.getElementById('fabBadge');
+      if (fabBadge) {
+        fabBadge.textContent = totalItems;
+        fabBadge.classList.toggle('hidden', totalItems === 0);
+      }
+
+      const headerBadge = document.getElementById('headerCartBadge');
+      if (headerBadge) {
+        headerBadge.textContent = totalItems;
+        headerBadge.classList.toggle('hidden', totalItems === 0);
+      }
+
+      const mobileBadge = document.getElementById('mobileNavCartBadge');
+      if (mobileBadge) {
+        mobileBadge.textContent = totalItems;
+        mobileBadge.classList.toggle('hidden', totalItems === 0);
+      }
+
+      const headerCountEl = document.getElementById('cartHeaderCount');
+      if (headerCountEl) {
+        headerCountEl.textContent = `${totalItems} ${totalItems === 1 ? 'item' : 'items'}`;
+      }
+
+      const clearBtn = document.getElementById('clearCartBtn');
+      if (clearBtn) {
+        clearBtn.style.display = totalItems > 0 ? 'inline-block' : 'none';
+      }
     }
 
     async function renderCart() {
       const container = document.getElementById('cartItems');
       const items = Object.values(cart);
+      const clearBtn = document.getElementById('clearCartBtn');
+      const totalRow = document.getElementById('cartTotalRow');
+
       if (items.length === 0) {
+        if (clearBtn) clearBtn.style.display = 'none';
+        if (totalRow) totalRow.style.display = 'none';
         container.innerHTML = `
-          <div class="cart-empty-state">
-            <h3>${t('cartEmpty')}</h3>
-            <p>${t('cartEmptyHint')}</p>
-            <button type="button" class="btn btn-accent" id="cartBrowseBtn">${t('browseCatalog')}</button>
+          <div class="cart-empty-state" style="text-align:center;padding:3rem 1rem;">
+            <div style="font-size:3.5rem;margin-bottom:0.75rem;opacity:0.8;">🛒</div>
+            <h3 style="font-size:1.15rem;font-weight:800;color:var(--text);margin-bottom:0.4rem;">${t('cartEmpty')}</h3>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem;max-width:260px;margin-left:auto;margin-right:auto;">${t('cartEmptyHint')}</p>
+            <button type="button" class="btn btn-accent" id="cartBrowseBtn" style="padding:0.75rem 1.5rem;border-radius:12px;font-weight:700;">${t('browseCatalog')}</button>
           </div>`;
         document.getElementById('cartGrandTotal').textContent = `${t('rs')} 0`;
         document.getElementById('whatsappBtn').disabled = true;
@@ -8336,33 +8662,74 @@
         return;
       }
 
+      if (clearBtn) clearBtn.style.display = 'inline-block';
+      if (totalRow) totalRow.style.display = 'flex';
+
       let total = 0;
+      let hasZeroPrice = false;
       const itemsHtml = await Promise.all(items.map(async ({ product: p, qty }) => {
         const price = parseFloat(p.retailPrice) || 0;
         const lineTotal = price * qty;
         total += lineTotal;
+        if (price === 0) hasZeroPrice = true;
         const imgUrl = await getProductImage(p.productId);
         const thumb = imgUrl
-          ? `<img class="cart-item-thumb" src="${imgUrl}" alt="">`
-          : `<div class="cart-item-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.7rem">—</div>`;
+          ? `<img class="cart-item-thumb" src="${imgUrl}" alt="${esc(p.productName)}" loading="lazy">`
+          : `<div class="cart-item-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.85rem;background:var(--surface-hover);">📦</div>`;
+        const partNum = p.barcode || p.productId || '';
         return `
-          <div class="cart-item">
+          <div class="cart-item" data-id="${esc(p.productId)}">
             <div class="cart-item-left">
               ${thumb}
               <div class="cart-item-info">
-                <div class="cart-item-name">${esc(p.productName)}</div>
-                <div class="cart-item-meta">Qty: ${qty}</div>
+                <div class="cart-item-name" title="${esc(p.productName)}">${esc(p.productName)}</div>
+                <div class="cart-item-meta">
+                  <span class="cart-item-brand">${esc(p.brand || 'GENUINE')}</span>
+                  ${partNum ? `<span style="font-family:monospace;font-size:0.72rem;">#${esc(partNum)}</span>` : ''}
+                </div>
+                <div class="cart-item-pricing">
+                  <span class="cart-item-unit-price">${price > 0 ? `${t('rs')} ${formatPrice(price)}` : 'Price on Request'}</span>
+                  ${price > 0 && qty > 1 ? `<span class="cart-item-line-total">(Total: ${t('rs')} ${formatPrice(lineTotal)})</span>` : ''}
+                </div>
               </div>
             </div>
-            <button class="cart-item-remove" data-id="${esc(p.productId)}">✕</button>
+            <div class="cart-item-actions">
+              <div class="cart-qty-control">
+                <button type="button" class="cart-qty-btn cart-qty-minus" data-id="${esc(p.productId)}" title="Decrease quantity" aria-label="Decrease quantity">−</button>
+                <input type="number" class="cart-qty-input" data-id="${esc(p.productId)}" value="${qty}" min="1" max="999" aria-label="Quantity">
+                <button type="button" class="cart-qty-btn cart-qty-plus" data-id="${esc(p.productId)}" title="Increase quantity" aria-label="Increase quantity">+</button>
+              </div>
+              <button type="button" class="cart-item-remove" data-id="${esc(p.productId)}" title="Remove item" aria-label="Remove item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
           </div>`;
       }));
       container.innerHTML = itemsHtml.join('');
 
-      document.getElementById('cartGrandTotal').textContent = `${t('rs')} ${formatPrice(total)}`;
+      const grandTotalEl = document.getElementById('cartGrandTotal');
+      const subtextEl = document.getElementById('cartTotalSubtext');
+      if (total > 0) {
+        grandTotalEl.textContent = `${t('rs')} ${formatPrice(total)}`;
+        if (subtextEl) {
+          subtextEl.textContent = hasZeroPrice ? '*Some parts are priced upon confirmation' : 'Estimated parts total';
+        }
+      } else {
+        grandTotalEl.textContent = 'Price on Request';
+        if (subtextEl) subtextEl.textContent = 'Exact pricing confirmed via WhatsApp';
+      }
+
       document.getElementById('whatsappBtn').disabled = false;
       const dlBtn = document.getElementById('downloadReceiptBtn');
       if (dlBtn) dlBtn.disabled = false;
+
+      // Auto restore saved customer name & phone
+      const savedName = localStorage.getItem('hkmotors_customer_name');
+      const savedPhone = localStorage.getItem('hkmotors_customer_phone');
+      const nameInput = document.getElementById('customerName');
+      const phoneInput = document.getElementById('customerPhone');
+      if (nameInput && !nameInput.value && savedName) nameInput.value = savedName;
+      if (phoneInput && !phoneInput.value && savedPhone) phoneInput.value = savedPhone;
     }
 
     function openCart() {
@@ -8376,27 +8743,86 @@
       document.getElementById('cartPanel').classList.remove('open');
     }
 
-    async function sendWhatsApp() {
-      const name = document.getElementById('customerName').value.trim();
-      const phone = document.getElementById('customerPhone').value.trim();
-      const notes = document.getElementById('orderNotes').value.trim();
+    function validatePhoneNumber(val) {
+      if (!val) return false;
+      const cleaned = val.replace(/[\s\-\(\)\.\+]/g, '');
+      return /^\d{9,15}$/.test(cleaned);
+    }
 
-      if (!name || !phone) {
-        showToast(t('fillRequired'));
+    async function sendWhatsApp() {
+      const nameInput = document.getElementById('customerName');
+      const phoneInput = document.getElementById('customerPhone');
+      const notesInput = document.getElementById('orderNotes');
+      const nameError = document.getElementById('nameErrorMsg');
+      const phoneError = document.getElementById('phoneErrorMsg');
+
+      const name = nameInput.value.trim();
+      const phone = phoneInput.value.trim();
+      const notes = notesInput ? notesInput.value.trim() : '';
+
+      let hasError = false;
+      if (!name) {
+        nameInput.classList.add('input-error');
+        if (nameError) nameError.style.display = 'block';
+        hasError = true;
+      } else {
+        nameInput.classList.remove('input-error');
+        if (nameError) nameError.style.display = 'none';
+      }
+
+      if (!phone || !validatePhoneNumber(phone)) {
+        phoneInput.classList.add('input-error');
+        if (phoneError) phoneError.style.display = 'block';
+        hasError = true;
+      } else {
+        phoneInput.classList.remove('input-error');
+        if (phoneError) phoneError.style.display = 'none';
+      }
+
+      if (hasError) {
+        showToast(t('fillRequired'), 'warning');
+        if (!name) nameInput.focus();
+        else if (!phone || !validatePhoneNumber(phone)) phoneInput.focus();
         return;
       }
 
-      const items = Object.values(cart);
-      if (items.length === 0) return;
+      // Save customer details for next time
+      try {
+        localStorage.setItem('hkmotors_customer_name', name);
+        localStorage.setItem('hkmotors_customer_phone', phone);
+      } catch (e) {}
 
-      let lines = items.map(({ product: p, qty }) => {
-        return `• ${p.productName} × ${qty}`;
+      const items = Object.values(cart);
+      if (items.length === 0) {
+        showToast(t('cartEmpty'), 'warning');
+        return;
+      }
+
+      let total = 0;
+      let lines = items.map(({ product: p, qty }, idx) => {
+        const price = parseFloat(p.retailPrice) || 0;
+        const lineTotal = price * qty;
+        total += lineTotal;
+        const part = p.barcode || p.productId || '';
+        const priceStr = price > 0 ? ` (Rs. ${formatPrice(price)} ea)` : '';
+        const partStr = part ? ` [Part #${part}]` : '';
+        return `${idx + 1}. *${p.productName}*${partStr}\n   Qty: *${qty}*${priceStr}`;
       });
 
-      let msg = `🛒 *New Order — HK Motors*\n\n`;
+      let msg = `🛒 *New Order / Quote Request — HK Motors*\n\n`;
       msg += `👤 *Customer:* ${name}\n`;
-      msg += `📞 *Phone:* ${phone}\n\n`;
-      msg += `*Items:*\n${lines.join('\n')}\n`;
+      msg += `📞 *Phone:* ${phone}\n`;
+      if (notes) msg += `📝 *Notes:* ${notes}\n`;
+      msg += `\n📦 *Order Items (${items.length}):*\n`;
+      msg += lines.join('\n\n') + '\n\n';
+      if (total > 0) {
+        msg += `💵 *Estimated Total:* Rs. ${formatPrice(total)}\n\n`;
+      }
+      msg += `Please confirm part availability and delivery. Thank you!`;
+
+      // Construct WhatsApp URL
+      const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+
       // Save order to local customer quote history
       saveCustomerOrderHistory({
         id: 'ORD-' + Date.now().toString().slice(-6),
@@ -8410,10 +8836,10 @@
           retailPrice: p.retailPrice,
           qty: qty
         })),
-        total: items.reduce((sum, { product: p, qty }) => sum + (parseFloat(p.retailPrice) || 0) * qty, 0)
+        total: total
       });
 
-      // Save order to Supabase
+      // Save order to Supabase in background without blocking WhatsApp navigation
       if (isCloudSyncActive && navigator.onLine) {
         try {
           const orderItems = items.map(({ product: p, qty }) => ({
@@ -8421,68 +8847,36 @@
             productName: p.productName,
             qty: qty
           }));
-
-          const { error } = await supabase.from('orders').insert({
+          supabase.from('orders').insert({
             customer_name: name,
             customer_phone: phone,
             notes: notes || null,
             items: orderItems,
             item_count: items.length,
             status: 'pending'
-          });
-
-          if (error) console.warn('[Orders] Failed to save order:', error);
-          else console.log('[Orders] Order saved to Supabase.');
+          }).then(({ error }) => {
+            if (error) console.warn('[Orders] Background order save error:', error);
+            else console.log('[Orders] Order recorded in cloud.');
+          }).catch(e => console.warn('[Orders] Could not save order:', e));
         } catch (e) {
-          console.warn('[Orders] Could not save order:', e);
+          console.warn('[Orders] Could not initiate cloud save:', e);
         }
       }
 
-      // Auto-reduce stock quantities
-      let stockUpdated = false;
-      for (const { product: p, qty } of items) {
-        const prod = products.find(x => String(x.productId) === String(p.productId));
-        if (prod) {
-          const currentStock = parseInt(prod.stockQty || prod.quantity || '0', 10);
-          const newStock = Math.max(0, currentStock - qty);
-          prod.stockQty = String(newStock);
-          prod.quantity = String(newStock);
-          stockUpdated = true;
-        }
+      // Open WhatsApp immediately with fallback so popup blocker never stops it
+      const waWin = window.open(url, '_blank');
+      if (!waWin || waWin.closed || typeof waWin.closed === 'undefined') {
+        window.location.href = url;
       }
-
-      if (stockUpdated) {
-        saveProducts();
-
-        // Update stock in Supabase too
-        if (isCloudSyncActive && navigator.onLine) {
-          for (const { product: p, qty } of items) {
-            const prod = products.find(x => String(x.productId) === String(p.productId));
-            if (prod) {
-              await supabase.from('products')
-                .update({ stock_qty: parseInt(prod.stockQty, 10), quantity: parseInt(prod.quantity, 10) })
-                .eq('product_id', p.productId)
-                .catch(e => console.warn('[Stock] Update failed:', e));
-            }
-          }
-        }
-      }
-
-      const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-      window.open(url, '_blank');
 
       // Clear cart after order
       cart = {};
       saveCart();
       updateCartBadge();
       closeCart();
-      document.getElementById('customerName').value = '';
-      document.getElementById('customerPhone').value = '';
-      document.getElementById('orderNotes').value = '';
       showToast('WhatsApp opened — tap Send to finish your order.', 'success');
       const confirmModal = document.getElementById('orderConfirmModal');
       if (confirmModal) confirmModal.classList.add('open');
-      renderAdminTable();
     }
 
     // ── Generate & Download Invoice Receipt PDF ──
@@ -10346,6 +10740,16 @@
         } else if (addCartBtn) {
           const id = addCartBtn.dataset.id;
           addToCart(id, cardQty[id] || 1);
+          const span = addCartBtn.querySelector('span');
+          const originalText = span ? span.textContent : '';
+          if (span) span.textContent = 'Added ✓';
+          addCartBtn.style.background = '#10b981';
+          addCartBtn.style.borderColor = '#10b981';
+          setTimeout(() => {
+            if (span && originalText) span.textContent = originalText;
+            addCartBtn.style.background = '';
+            addCartBtn.style.borderColor = '';
+          }, 1100);
         } else if (categoryTile) {
           window.location.hash = `#/category/${encodeURIComponent(categoryTile.dataset.category)}`;
         } else if (brandCard) {
@@ -10394,19 +10798,67 @@
         }
       });
 
-      // Cart Side Panel Drawers
-      document.getElementById('fabCart').addEventListener('click', openCart);
-      document.getElementById('closeCart').addEventListener('click', closeCart);
-      document.getElementById('cartOverlay').addEventListener('click', closeCart);
+      // Cart Side Panel Drawers & Actions
+      const fabCart = document.getElementById('fabCart');
+      if (fabCart) fabCart.addEventListener('click', openCart);
 
-      document.getElementById('cartItems').addEventListener('click', e => {
-        if (e.target.classList.contains('cart-item-remove')) {
-          delete cart[e.target.dataset.id];
-          saveCart();
-          updateCartBadge();
-          renderCart();
-        }
-      });
+      const headerCartBtn = document.getElementById('headerCartBtn');
+      if (headerCartBtn) headerCartBtn.addEventListener('click', openCart);
+
+      const mobileNavCartBtn = document.getElementById('mobileNavCartBtn');
+      if (mobileNavCartBtn) mobileNavCartBtn.addEventListener('click', openCart);
+
+      const closeCartBtn = document.getElementById('closeCart');
+      if (closeCartBtn) closeCartBtn.addEventListener('click', closeCart);
+
+      const cartOverlay = document.getElementById('cartOverlay');
+      if (cartOverlay) cartOverlay.addEventListener('click', closeCart);
+
+      const clearCartBtn = document.getElementById('clearCartBtn');
+      if (clearCartBtn) clearCartBtn.addEventListener('click', clearCart);
+
+      // Cart Items Interactive Delegation
+      const cartItemsEl = document.getElementById('cartItems');
+      if (cartItemsEl) {
+        cartItemsEl.addEventListener('click', e => {
+          const minusBtn = e.target.closest('.cart-qty-minus');
+          const plusBtn = e.target.closest('.cart-qty-plus');
+          const removeBtn = e.target.closest('.cart-item-remove');
+
+          if (minusBtn) {
+            changeCartItemQty(minusBtn.dataset.id, -1);
+          } else if (plusBtn) {
+            changeCartItemQty(plusBtn.dataset.id, 1);
+          } else if (removeBtn) {
+            removeCartItem(removeBtn.dataset.id);
+          }
+        });
+
+        cartItemsEl.addEventListener('change', e => {
+          if (e.target.classList.contains('cart-qty-input')) {
+            setCartItemQty(e.target.dataset.id, e.target.value);
+          }
+        });
+      }
+
+      // Real-time error dismissal for customer inputs
+      const customerNameInput = document.getElementById('customerName');
+      if (customerNameInput) {
+        customerNameInput.addEventListener('input', () => {
+          customerNameInput.classList.remove('input-error');
+          const err = document.getElementById('nameErrorMsg');
+          if (err) err.style.display = 'none';
+        });
+      }
+
+      const customerPhoneInput = document.getElementById('customerPhone');
+      if (customerPhoneInput) {
+        customerPhoneInput.addEventListener('input', () => {
+          customerPhoneInput.classList.remove('input-error');
+          const err = document.getElementById('phoneErrorMsg');
+          if (err) err.style.display = 'none';
+        });
+      }
 
       document.getElementById('whatsappBtn').addEventListener('click', sendWhatsApp);
       document.getElementById('downloadReceiptBtn').addEventListener('click', downloadOrderReceipt);
