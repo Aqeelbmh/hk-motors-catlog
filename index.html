@@ -1154,33 +1154,30 @@
       overflow-y: auto;
       padding-right: 0.2rem;
     }
+    /* Order preview item layout — no thumbnails, full-width text layout */
     .order-preview-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
-      padding: 0.45rem 0;
+      display: grid;
+      grid-template-columns: 1.5rem 1fr auto;
+      align-items: start;
+      gap: 0.5rem 0.75rem;
+      padding: 0.55rem 0;
       border-bottom: 1px dashed var(--border);
-      font-size: 0.84rem;
+      font-size: 0.83rem;
     }
     .order-preview-item:last-child {
       border-bottom: none;
     }
-    .order-preview-item-left {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      flex: 1;
-      min-width: 0;
+    .order-preview-item-num {
+      font-weight: 800;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      padding-top: 0.1rem;
     }
-    .order-preview-thumb {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      object-fit: contain;
-      background: var(--bg-alt);
-      border: 1px solid var(--border);
-      flex-shrink: 0;
+    .order-preview-item-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.12rem;
+      min-width: 0;
     }
     .order-preview-name {
       font-weight: 700;
@@ -1188,17 +1185,35 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      font-size: 0.86rem;
+    }
+    .order-preview-id {
+      font-size: 0.72rem;
+      color: var(--accent);
+      font-weight: 600;
+      font-family: monospace;
+      letter-spacing: 0.02em;
     }
     .order-preview-qty {
       font-size: 0.74rem;
       color: var(--text-muted);
       font-weight: 600;
     }
+    .order-preview-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
     .order-preview-price {
       font-weight: 800;
       color: var(--accent);
       white-space: nowrap;
       font-size: 0.86rem;
+      text-align: right;
+      padding-top: 0.1rem;
     }
 
     /* Customer details card */
@@ -5523,7 +5538,10 @@
               <span>📋</span>
               <span>Order Summary Before Sending</span>
             </div>
-            <button type="button" class="btn-edit-items" id="btnEditItemsLink">Edit Items ✏️</button>
+            <div style="display:flex;align-items:center;gap:0.4rem;">
+              <button type="button" id="btnDownloadOrderPdf" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:0.2rem 0.55rem;font-size:0.76rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:0.3rem;" title="Download order as PDF for review">📄 PDF</button>
+              <button type="button" class="btn-edit-items" id="btnEditItemsLink">Edit Items ✏️</button>
+            </div>
           </div>
           <div class="order-preview-list" id="orderPreviewList"></div>
           <div class="order-preview-footer" style="display:flex;justify-content:space-between;align-items:center;margin-top:0.85rem;padding-top:0.65rem;border-top:1px dashed var(--border);font-weight:800;">
@@ -9001,25 +9019,25 @@
         if (subtextEl) subtextEl.textContent = 'Exact pricing confirmed via WhatsApp';
       }
 
-      // Step 2 Detailed Order Summary Before Sending
+      // Step 2 — Clean Order Summary (no images)
       const previewList = document.getElementById('orderPreviewList');
       if (previewList) {
-        previewList.innerHTML = items.map(({ product: p, qty }) => {
-          const price = parseFloat(p.retailPrice) || 0;
+        previewList.innerHTML = items.map(({ product: p, qty }, idx) => {
+          const price  = parseFloat(p.retailPrice) || 0;
           const lineTotal = price * qty;
-          const imgUrl = getFirstImage(p.productId) || (p.image_urls && p.image_urls[0]) || '';
-          const thumb = imgUrl
-            ? `<img class="order-preview-thumb" src="${imgUrl}" alt="${esc(p.productName)}" loading="lazy">`
-            : `<div class="order-preview-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.75rem;background:var(--surface-hover);">📦</div>`;
-          const partStr = p.barcode || p.productId || '';
+          const idStr  = esc(p.productId || '');
+          const descStr = p.description ? esc(p.description).substring(0, 80) + (p.description.length > 80 ? '…' : '') : '';
+          const brandStr = p.brand ? `${esc(p.brand)}` : '';
+          const barcodeStr = p.barcode ? ` · #${esc(p.barcode)}` : '';
+          const meta = [brandStr + barcodeStr, `Qty: ${qty}`].filter(Boolean).join(' · ');
           return `
             <div class="order-preview-item">
-              <div class="order-preview-item-left">
-                ${thumb}
-                <div style="min-width:0;flex:1;">
-                  <div class="order-preview-name" title="${esc(p.productName)}">${esc(p.productName)}</div>
-                  <div class="order-preview-qty">${esc(p.brand || 'GENUINE')}${partStr ? ` • #${esc(partStr)}` : ''} • Qty: <strong>${qty}</strong></div>
-                </div>
+              <div class="order-preview-item-num">${idx + 1}</div>
+              <div class="order-preview-item-body">
+                <div class="order-preview-name" title="${esc(p.productName)}">${esc(p.productName)}</div>
+                ${idStr ? `<div class="order-preview-id">ID: ${idStr}</div>` : ''}
+                <div class="order-preview-qty">${meta}</div>
+                ${descStr ? `<div class="order-preview-desc" title="${esc(p.description || '')}">${descStr}</div>` : ''}
               </div>
               <div class="order-preview-price">${price > 0 ? `${t('rs')} ${formatPrice(lineTotal)}` : 'On Request'}</div>
             </div>`;
@@ -9226,101 +9244,200 @@
       const items = Object.values(cart);
       if (items.length === 0) return;
 
+      _buildOrderPDF({ name, phone, notes, items, filename: `HK_Motors_Order_${name.replace(/\s+/g, '_')}.pdf`, mode: 'receipt' });
+    }
+
+    // ── Download Order Review PDF (pre-send, no name/phone required) ──
+    function downloadOrderReviewPDF() {
+      const items = Object.values(cart);
+      if (items.length === 0) { showToast('Your order is empty', 'warning'); return; }
+      const name  = (document.getElementById('customerName')?.value || '').trim();
+      const phone = (document.getElementById('customerPhone')?.value || '').trim();
+      const notes = (document.getElementById('orderNotes')?.value  || '').trim();
+      const dateSlug = new Date().toISOString().slice(0, 10);
+      _buildOrderPDF({ name, phone, notes, items, filename: `HK_Motors_OrderReview_${dateSlug}.pdf`, mode: 'review' });
+    }
+
+    // ── Shared PDF builder used by both receipt and review ──
+    function _buildOrderPDF({ name, phone, notes, items, filename, mode }) {
       try {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-        // Header decoration band
-        doc.setFillColor(10, 53, 92); // Deep Navy (#0a355c)
-        doc.rect(0, 0, 210, 35, 'F');
+        const NAVY   = [10, 53, 92];
+        const WHITE  = [255, 255, 255];
+        const DARK   = [15, 23, 42];
+        const MUTED  = [100, 116, 139];
+        const ACCENT = [14, 165, 233];
+        const BGALT  = [241, 245, 249];
+        const BORDER = [203, 213, 225];
+        const PW = 210;  // page width mm
+        const ML = 14;   // margin left
+        const MR = 14;   // margin right
+        const CW = PW - ML - MR; // content width
 
-        doc.setTextColor(255, 255, 255);
+        // ── Header band ──
+        doc.setFillColor(...NAVY);
+        doc.rect(0, 0, PW, 36, 'F');
+        doc.setTextColor(...WHITE);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(22);
-        doc.text('HK MOTORS', 15, 18);
+        doc.text('HK MOTORS', ML, 18);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
-        doc.text('Premium Spare Parts Catalog Order Receipt', 15, 26);
+        doc.text(mode === 'review' ? 'Order Review — Spare Parts Catalog' : 'Premium Spare Parts Catalog Order Receipt', ML, 27);
 
-        // Header info metadata
-        doc.setTextColor(80, 80, 80);
-        doc.setFontSize(9);
+        // Date + contact top-right
         const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-        doc.text(`Date: ${dateStr}`, 140, 15);
-        doc.text(`WhatsApp: +${WHATSAPP_NUMBER}`, 140, 21);
-
-        // Customer details block
-        doc.setFillColor(241, 245, 249);
-        doc.rect(15, 45, 180, 24, 'F');
-        doc.setDrawColor(203, 213, 225);
-        doc.rect(15, 45, 180, 24, 'D');
-
-        doc.setTextColor(15, 23, 42);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.text('CUSTOMER DETAILS', 20, 51);
-        
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.text(`Name: ${name}`, 20, 57);
-        doc.text(`Phone: ${phone}`, 20, 63);
-
-        // Table Header
-        let y = 80;
-        doc.setFillColor(10, 53, 92);
-        doc.rect(15, y, 180, 8, 'F');
-        
-        doc.setTextColor(255, 255, 255);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9.5);
-        doc.text('No.', 18, y + 5.5);
-        doc.text('Product Name', 30, y + 5.5);
-        doc.text('Brand', 125, y + 5.5);
-        doc.text('Qty', 175, y + 5.5);
-
-        // Table Rows
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(15, 23, 42);
-        
-        items.forEach(({ product: p, qty }, idx) => {
-          y += 8;
-          if (y > 270) { doc.addPage(); y = 20; }
-          // Alternating row background colors
-          if (idx % 2 === 1) {
-            doc.setFillColor(248, 250, 252);
-            doc.rect(15, y, 180, 8, 'F');
-          }
-          doc.rect(15, y, 180, 8, 'D');
-          doc.text(String(idx + 1), 18, y + 5.5);
-          doc.text(esc(p.productName).substring(0, 48), 30, y + 5.5);
-          doc.text(esc(p.brand || 'GENUINE').substring(0, 20), 125, y + 5.5);
-          doc.text(String(qty), 175, y + 5.5);
-        });
-
-        // Notes if any
-        if (notes) {
-          y += 15;
-          if (y > 270) { doc.addPage(); y = 20; }
-          doc.setFont('helvetica', 'bold');
-          doc.text('Customer Notes:', 15, y);
-          doc.setFont('helvetica', 'normal');
-          doc.text(notes, 15, y + 5);
+        doc.setFontSize(8.5);
+        doc.text(`Date: ${dateStr}`, 140, 14, { align: 'left' });
+        doc.text(`WhatsApp: +${WHATSAPP_NUMBER}`, 140, 21, { align: 'left' });
+        if (mode === 'review') {
+          doc.setFontSize(7.5);
+          doc.text('DRAFT — for review only', 140, 28, { align: 'left' });
         }
 
-        // Footer
-        doc.setFontSize(8);
-        doc.setTextColor(148, 163, 184);
-        doc.text('Thank you for ordering with HK Motors!', 105, 285, null, null, 'center');
+        let y = 44;
 
-        doc.save(`HK_Motors_Order_${name.replace(/\s+/g, '_')}.pdf`);
-        showToast('Receipt PDF downloaded successfully!', 'success');
+        // ── Customer Details block (only if name/phone available) ──
+        if (name || phone) {
+          doc.setFillColor(...BGALT);
+          doc.setDrawColor(...BORDER);
+          doc.roundedRect(ML, y, CW, name && phone ? 22 : 14, 3, 3, 'FD');
+          doc.setTextColor(...DARK);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9);
+          doc.text('CUSTOMER DETAILS', ML + 5, y + 7);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8.5);
+          if (name)  doc.text(`Name:  ${name}`,  ML + 5, y + 13);
+          if (phone) doc.text(`Phone: ${phone}`, name ? ML + 85 : ML + 5, y + 13);
+          y += (name && phone ? 22 : 14) + 6;
+        } else {
+          y += 4;
+        }
+
+        // ── Items table header ──
+        const COL = { no: ML, id: ML+9, name: ML+30, brand: ML+112, qty: ML+145, price: ML+162 };
+        doc.setFillColor(...NAVY);
+        doc.rect(ML, y, CW, 8, 'F');
+        doc.setTextColor(...WHITE);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.text('#',        COL.no   + 2, y + 5.5);
+        doc.text('ID',       COL.id   + 1, y + 5.5);
+        doc.text('Product Name',  COL.name,   y + 5.5);
+        doc.text('Brand',    COL.brand,  y + 5.5);
+        doc.text('Qty',      COL.qty,    y + 5.5);
+        doc.text('Price',    COL.price,  y + 5.5);
+        y += 8;
+
+        // ── Items rows ──
+        let grandTotal = 0;
+        let hasOnRequest = false;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+
+        items.forEach(({ product: p, qty }, idx) => {
+          const price = parseFloat(p.retailPrice) || 0;
+          const lineTotal = price * qty;
+          grandTotal += lineTotal;
+          if (price === 0) hasOnRequest = true;
+
+          const desc = p.description ? p.description.substring(0, 75) : '';
+          const rowH = desc ? 13 : 8;
+
+          if (y + rowH > 272) { doc.addPage(); y = 18; }
+
+          // Alternating row bg
+          if (idx % 2 === 1) {
+            doc.setFillColor(...BGALT);
+            doc.rect(ML, y, CW, rowH, 'F');
+          }
+          doc.setDrawColor(...BORDER);
+          doc.rect(ML, y, CW, rowH, 'D');
+
+          doc.setTextColor(...DARK);
+          doc.text(String(idx + 1),                       COL.no   + 2, y + 5.5);
+          doc.text((p.productId || '').substring(0, 8),   COL.id   + 1, y + 5.5);
+          doc.text((p.productName || '').substring(0, 38), COL.name, y + 5.5);
+          doc.text((p.brand || '').substring(0, 14),       COL.brand, y + 5.5);
+          doc.text(String(qty),                            COL.qty,  y + 5.5);
+
+          if (price > 0) {
+            doc.text(`Rs.${formatPrice(lineTotal)}`,      COL.price, y + 5.5);
+          } else {
+            doc.setTextColor(...MUTED);
+            doc.text('On Request', COL.price, y + 5.5);
+            doc.setTextColor(...DARK);
+          }
+
+          if (desc) {
+            doc.setTextColor(...MUTED);
+            doc.setFontSize(7.2);
+            doc.text(desc, COL.name, y + 10.5);
+            doc.setTextColor(...DARK);
+            doc.setFontSize(8);
+          }
+
+          y += rowH;
+        });
+
+        // ── Totals row ──
+        y += 4;
+        if (y > 272) { doc.addPage(); y = 18; }
+        doc.setFillColor(...NAVY);
+        doc.rect(ML, y, CW, 9, 'F');
+        doc.setTextColor(...WHITE);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.text('TOTAL', COL.name, y + 6);
+        doc.text(
+          grandTotal > 0 ? `Rs. ${formatPrice(grandTotal)}` : 'Price on Request',
+          COL.price, y + 6
+        );
+        y += 9;
+
+        if (hasOnRequest) {
+          y += 4;
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(7.5);
+          doc.setTextColor(...MUTED);
+          doc.text('* Items marked "On Request" have no listed price. Final price will be confirmed via WhatsApp.', ML, y);
+          y += 5;
+        }
+
+        // ── Notes ──
+        if (notes) {
+          y += 6;
+          if (y > 272) { doc.addPage(); y = 18; }
+          doc.setFillColor(254, 252, 232);  // amber tint
+          doc.setDrawColor(253, 224, 71);
+          doc.roundedRect(ML, y, CW, 18, 3, 3, 'FD');
+          doc.setTextColor(...DARK);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8.5);
+          doc.text('Notes / Special Instructions:', ML + 4, y + 6);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8);
+          doc.text(notes.substring(0, 110), ML + 4, y + 13);
+          y += 20;
+        }
+
+        // ── Footer ──
+        doc.setFontSize(7.5);
+        doc.setTextColor(...MUTED);
+        doc.text('Thank you for ordering with HK Motors!', PW / 2, 288, { align: 'center' });
+        if (mode === 'review') {
+          doc.text('This is a draft review PDF only. Send your order via WhatsApp to confirm.', PW / 2, 293, { align: 'center' });
+        }
+
+        doc.save(filename);
+        showToast(mode === 'review' ? 'Order review PDF downloaded!' : 'Receipt PDF downloaded successfully!', 'success');
       } catch (err) {
-        console.error('[Receipt PDF] Failed:', err);
-        showToast('Failed to generate PDF receipt: ' + err.message, 'error');
+        console.error('[PDF] Failed:', err);
+        showToast('Failed to generate PDF: ' + err.message, 'error');
       }
     }
 
@@ -11325,6 +11442,7 @@
 
       document.getElementById('whatsappBtn').addEventListener('click', sendWhatsApp);
       document.getElementById('downloadReceiptBtn').addEventListener('click', downloadOrderReceipt);
+      document.getElementById('btnDownloadOrderPdf').addEventListener('click', downloadOrderReviewPDF);
 
       // Order History & Bin Labels
       const printLabelsBtn = document.getElementById('printBinLabelsBtn');
