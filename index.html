@@ -4457,17 +4457,8 @@
       color: var(--text-muted);
     }
 
-    /* Cart Item Image Sizing */
-    .cart-item-thumb {
-      width: 48px;
-      height: 48px;
-      border-radius: 8px;
-      object-fit: contain;
-      background: var(--image-placeholder-bg);
-      border: 1px solid var(--border);
-      flex-shrink: 0;
-      padding: 2px;
-    }
+    /* Cart Item Image — hidden (images removed from cart review list) */
+    .cart-item-thumb { display: none !important; }
 
     /* ── Tablet & PWA Adjustments ── */
     body {
@@ -8966,20 +8957,15 @@
 
       let total = 0;
       let hasZeroPrice = false;
-      const itemsHtml = await Promise.all(items.map(async ({ product: p, qty }) => {
+      const itemsHtml = items.map(({ product: p, qty }) => {
         const price = parseFloat(p.retailPrice) || 0;
         const lineTotal = price * qty;
         total += lineTotal;
         if (price === 0) hasZeroPrice = true;
-        const imgUrl = await getProductImage(p.productId);
-        const thumb = imgUrl
-          ? `<img class="cart-item-thumb" src="${imgUrl}" alt="${esc(p.productName)}" loading="lazy">`
-          : `<div class="cart-item-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:0.85rem;background:var(--surface-hover);">📦</div>`;
         const partNum = p.barcode || p.productId || '';
         return `
           <div class="cart-item" data-id="${esc(p.productId)}">
             <div class="cart-item-left">
-              ${thumb}
               <div class="cart-item-info">
                 <div class="cart-item-name" title="${esc(p.productName)}">${esc(p.productName)}</div>
                 <div class="cart-item-meta">
@@ -9003,7 +8989,7 @@
               </button>
             </div>
           </div>`;
-      }));
+      });
       container.innerHTML = itemsHtml.join('');
 
       // Step 1 Grand Total
