@@ -65,6 +65,8 @@
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <!-- jsPDF Receipt Generator Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- JSZip — in-browser ZIP builder for CSV+Images export -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
 
@@ -5657,6 +5659,7 @@
       <div class="toolbar-section actions-section">
         <button class="btn btn-accent btn-sm" id="addProductBtn" style="border-radius: 8px; padding: 0.55rem 1rem;">➕ Add Product</button>
         <button class="btn btn-ghost btn-sm" id="exportCsvBtn" style="border-radius: 8px; padding: 0.55rem 1rem;">📤 Export CSV</button>
+        <button class="btn btn-ghost btn-sm" id="exportCsvImagesBtn" style="border-radius: 8px; padding: 0.55rem 1rem;" title="Export CSV together with product images as a ZIP archive">🗜️ Export CSV + Images</button>
         
         <label class="btn btn-ghost btn-sm import-label" style="cursor:pointer; border-radius: 8px; padding: 0.55rem 1rem;">
           📥 Import CSV / Excel / JSON
@@ -10676,15 +10679,17 @@
     }
 
     // ── CSV Export/Import ──
+    function csvEscape(v) {
+      const s = String(v == null ? '' : v);
+      if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+        return '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }
+
     function exportCSV() {
       const header = COLUMNS.map(c => COLUMN_LABELS[c]);
-      const rows = products.map(p => COLUMNS.map(c => {
-        let v = String(p[c] || '');
-        if (v.includes(',') || v.includes('"') || v.includes('\n')) {
-          v = '"' + v.replace(/"/g, '""') + '"';
-        }
-        return v;
-      }));
+      const rows = products.map(p => COLUMNS.map(c => csvEscape(p[c])));
       const csv = [header, ...rows].map(r => r.join(',')).join('\n');
       const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
       const a = document.createElement('a');
@@ -10693,6 +10698,119 @@
       a.click();
       URL.revokeObjectURL(a.href);
       showToast('CSV exported');
+    }
+
+    // ── Export CSV + Images as ZIP ──
+    async function exportCSVWithImages() {
+      const btn = document.getElementById('exportCsvImagesBtn');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Preparing ZIP…'; }
+      showToast('Building ZIP — fetching product images…', 'info');
+
+      try {
+        if (typeof JSZip === 'undefined') {
+          showToast('JSZip library not loaded. Please check your internet connection.', 'error');
+          return;
+        }
+        const zip = new JSZip();
+        const imgFolder = zip.folder('images');
+        const dateStr = new Date().toISOString().slice(0, 10);
+
+        // Build CSV header — standard columns + Image File column
+        const csvHeader = [...COLUMNS.map(c => COLUMN_LABELS[c]), 'Image File', 'Image URL'];
+
+        // Process each product, fetch its image
+        let done = 0;
+        const total = products.length;
+        const csvRows = await Promise.all(products.map(async p => {
+          const id = String(p.productId);
+          let imageFile = '';
+          let imageUrl = '';
+
+          // Try to get image: first from imageCache / IndexedDB (base64 data URL)
+          let dataUrl = getFirstImage(id);
+          if (!dataUrl) {
+            try {
+              const imgs = await getProductImages(id);
+              dataUrl = imgs && imgs[0] ? imgs[0] : null;
+            } catch(e) { dataUrl = null; }
+          }
+
+          if (dataUrl) {
+            if (dataUrl.startsWith('data:')) {
+              // Local base64 — extract and add to ZIP
+              const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+              if (match) {
+                const mime = match[1]; // e.g. image/jpeg
+                const b64  = match[2];
+                const ext  = mime.split('/')[1] ? mime.split('/')[1].replace('jpeg','jpg') : 'jpg';
+                imageFile = `${id}.${ext}`;
+                imgFolder.file(imageFile, b64, { base64: true });
+              }
+            } else if (dataUrl.startsWith('http')) {
+              // Cloud URL — try to fetch as blob
+              imageUrl = dataUrl;
+              try {
+                const resp = await fetch(dataUrl);
+                if (resp.ok) {
+                  const arrayBuf = await resp.arrayBuffer();
+                  const ct = resp.headers.get('content-type') || 'image/jpeg';
+                  const ext = ct.split('/')[1] ? ct.split('/')[1].replace('jpeg','jpg').split(';')[0] : 'jpg';
+                  imageFile = `${id}.${ext}`;
+                  imgFolder.file(imageFile, arrayBuf);
+                }
+              } catch(e) { /* Network error — skip download, keep URL */ }
+            }
+          }
+
+          // Also check product.image_urls for cloud URLs if no local found
+          if (!imageFile && !imageUrl && p.image_urls && p.image_urls.length > 0) {
+            imageUrl = p.image_urls[0];
+          }
+
+          done++;
+          if (done % 50 === 0 && btn) {
+            btn.textContent = `⏳ ${Math.round(done/total*100)}%…`;
+          }
+
+          const row = [...COLUMNS.map(c => csvEscape(p[c])), csvEscape(imageFile), csvEscape(imageUrl)];
+          return row.join(',');
+        }));
+
+        // Assemble CSV text
+        const csvText = '\ufeff' + csvHeader.join(',') + '\n' + csvRows.join('\n');
+        zip.file(`hkmotors_products_${dateStr}.csv`, csvText);
+
+        // Add a README
+        const readme = [
+          'HK Motors — CSV + Images Export',
+          `Generated: ${new Date().toLocaleString()}`,
+          `Products: ${products.length}`,
+          '',
+          'CONTENTS:',
+          `  hkmotors_products_${dateStr}.csv  — Product data`,
+          '  images/                           — Product images (named <productId>.<ext>)',
+          '',
+          'The CSV column "Image File" contains the filename inside the images/ folder.',
+          'The column "Image URL" contains the original cloud URL (if any).',
+          'Products without a local image will have a blank "Image File" but may have an "Image URL".',
+        ].join('\n');
+        zip.file('README.txt', readme);
+
+        // Generate and trigger download
+        const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `hkmotors_export_${dateStr}.zip`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+
+        showToast(`ZIP exported — ${products.length} products`, 'success');
+      } catch(err) {
+        console.error('[exportCSVWithImages]', err);
+        showToast('Export failed: ' + err.message, 'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '🗜️ Export CSV + Images'; }
+      }
     }
 
     function parseCSV(text) {
@@ -11362,6 +11480,7 @@
       });
 
       document.getElementById('exportCsvBtn').addEventListener('click', exportCSV);
+      document.getElementById('exportCsvImagesBtn').addEventListener('click', exportCSVWithImages);
       document.getElementById('importCsvInput').addEventListener('change', e => {
         if (e.target.files[0]) { importExcelOrCSV(e.target.files[0]); e.target.value = ''; }
       });

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'HKMOTORS-V30';
+const CACHE_NAME = 'HKMOTORS-V31';
 
 const PRECACHE_ASSETS = [
   './',
@@ -13,7 +13,8 @@ const PRECACHE_ASSETS = [
   './icons/maskable-icon.png',
   './supabase-config.js',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
-  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
+  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+  'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'
 ];
 
 function isAppShellRequest(request, url) {
